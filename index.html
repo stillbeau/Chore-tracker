@@ -57,8 +57,8 @@
     <!-- + Button with Dropdown Menu -->
     <button class="add-button" onclick="toggleDropdown()">+</button>
     <div class="dropdown" id="dropdownMenu">
-        <a href="#" onclick="showTasksPage()">Add Chore (Tasks Page)</a>
-        <a href="#" onclick="showAddFamilyForm()">Add Family Member</a>
+        <a href="#" onclick="showTasksPage(); return false;">Add Chore (Tasks Page)</a>
+        <a href="#" onclick="showAddFamilyForm(); return false;">Add Family Member</a>
     </div>
 
     <h1>Family Chore Tracker</h1>
@@ -189,4 +189,5 @@
 
         function assignTask(taskIndex) {
             const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
-            if (familyMemberIndex !==
+            if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
+                familyMembers[familyMemberIndex].tasks.push({ ...predefinedTasks[taskIndex], completed:

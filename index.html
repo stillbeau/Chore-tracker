@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Chore Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; }
+        .task, .user { margin-bottom: 15px; }
+        .btn { padding: 5px 10px; margin-top: 10px; }
+        
+        /* Style for the + button */
+        .add-button { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            font-size: 24px; 
+            cursor: pointer; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            border-radius: 50%; 
+        }
+
+        /* Dropdown Menu */
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 10px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown a {
+            color: black;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown a:hover { background-color: #ddd; }
+    </style>
+</head>
+<body>
+    <!-- Add button and dropdown menu -->
+    <button class="add-button" onclick="toggleDropdown()">+</button>
+    <div class="dropdown" id="dropdownMenu">
+        <a href="#" onclick="showAddUser()">Add Family Member</a>
+        <a href="#" onclick="showAddTask()">Add Task</a>
+    </div>
+
+    <h1>Family Chore Tracker</h1>
+    <div id="app">
+        <!-- Content for adding tasks and family members will go here -->
+    </div>
+
+    <script>
+        // Toggle dropdown visibility
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Show family member form
+        function showAddUser() {
+            alert('Add Family Member form goes here');
+            toggleDropdown();
+        }
+
+        // Show task form
+        function showAddTask() {
+            alert('Add Task form goes here');
+            toggleDropdown();
+        }
+    </script>
+</body>
+</html>

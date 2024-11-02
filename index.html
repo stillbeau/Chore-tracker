@@ -62,6 +62,7 @@
         }
 
         .due-task { color: red; font-weight: bold; }
+        .completed-task { color: green; text-decoration: line-through; }
 
         /* Form styling */
         .form-container {
@@ -78,11 +79,16 @@
     <!-- Add button and dropdown menu -->
     <button class="add-button" onclick="toggleDropdown()">+</button>
     <div class="dropdown" id="dropdownMenu">
-        <a href="#" onclick="showAddUserForm()">Add Family Member</a>
         <a href="#" onclick="showAddTaskForm()">Add Task</a>
     </div>
 
     <h1>Family Chore Tracker</h1>
+
+    <!-- Tasks Section -->
+    <div id="tasksContainer">
+        <h2>Needs to be Done</h2>
+        <div id="needsToBeDone"></div>
+    </div>
 
     <!-- Family Members Section -->
     <div id="familyMembers"></div>
@@ -90,32 +96,21 @@
     <!-- Add Task Form -->
     <div id="addTaskForm" class="form-container">
         <h2>Add Task</h2>
-        
-        <!-- Custom Task Option -->
-        <h3>Custom Task</h3>
         <label>Task Name: <input type="text" id="customTaskName"></label><br>
         <label>Value: <input type="number" id="customTaskValue"></label><br>
-        <label>Due Type:
-            <select id="dueType">
-                <option value="daily">Daily</option>
-                <option value="interval">Countdown (days)</option>
-            </select>
-        </label><br>
-        <label id="dueTimeLabel">Due Time: <input type="time" id="dueTime" value="19:00"></label><br>
-        <label id="intervalLabel" style="display: none;">Interval (days): <input type="number" id="dueInterval" min="1" value="7"></label><br>
         <button onclick="addCustomTask()">Add Custom Task</button>
         <button onclick="hideForms()">Cancel</button>
     </div>
 
     <script>
         const familyMembers = [
-            { name: "Mom", photo: "https://via.placeholder.com/50", totalEarned: 120, completedTasks: [] },
-            { name: "Dad", photo: "https://via.placeholder.com/50", totalEarned: 85, completedTasks: [] },
+            { name: "Mom", photo: "https://via.placeholder.com/50", totalEarned: 120, tasks: [] },
+            { name: "Dad", photo: "https://via.placeholder.com/50", totalEarned: 85, tasks: [] },
         ];
 
         const tasks = [
-            { name: "Load the Dishwasher", type: "daily", time: "19:00", value: 5, completed: false },
-            { name: "Clean the Washroom", type: "interval", interval: 7, lastCompleted: null, value: 10, completed: false }
+            { name: "Load the Dishwasher", value: 5, completed: false },
+            { name: "Clean the Washroom", value: 10, completed: false }
         ];
 
         function toggleDropdown() {
@@ -136,69 +131,96 @@
         function addCustomTask() {
             const name = document.getElementById('customTaskName').value;
             const value = parseFloat(document.getElementById('customTaskValue').value);
-            const dueType = document.getElementById('dueType').value;
-            let newTask;
 
-            if (dueType === "daily") {
-                const time = document.getElementById('dueTime').value;
-                newTask = { name, type: dueType, time, value, completed: false };
+            if (name && !isNaN(value)) {
+                tasks.unshift({ name, value, completed: false }); // Add new task to the top
+                hideForms();
+                renderTasks();
             } else {
-                const interval = parseInt(document.getElementById('dueInterval').value);
-                newTask = { name, type: dueType, interval, lastCompleted: null, value, completed: false };
+                alert("Please enter a valid task name and value.");
             }
-
-            tasks.unshift(newTask); // Add new task to the top
-            hideForms();
-            renderTasks();
-        }
-
-        // Show/Hide fields based on due type selection
-        document.getElementById('dueType').addEventListener('change', (e) => {
-            const dueTimeLabel = document.getElementById('dueTimeLabel');
-            const intervalLabel = document.getElementById('intervalLabel');
-
-            if (e.target.value === "daily") {
-                dueTimeLabel.style.display = 'block';
-                intervalLabel.style.display = 'none';
-            } else {
-                dueTimeLabel.style.display = 'none';
-                intervalLabel.style.display = 'block';
-            }
-        });
-
-        // Check if a task is due
-        function isTaskDue(task) {
-            const now = new Date();
-
-            if (task.type === "daily") {
-                const [hour, minute] = task.time.split(':').map(Number);
-                const dueTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
-                return now >= dueTime && !task.completed;
-            } else if (task.type === "interval") {
-                if (!task.lastCompleted) return true;
-                const daysSinceCompleted = (now - new Date(task.lastCompleted)) / (1000 * 60 * 60 * 24);
-                return daysSinceCompleted >= task.interval;
-            }
-            return false;
         }
 
         function renderTasks() {
+            const needsToBeDoneContainer = document.getElementById('needsToBeDone');
+            needsToBeDoneContainer.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                if (!task.completed) {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.innerHTML = `
+                        <div>${task.name} - $${task.value}</div>
+                        <button onclick="assignTask(${index})">Assign</button>
+                    `;
+                    needsToBeDoneContainer.appendChild(taskDiv);
+                }
+            });
+
+            renderFamilyMembers();
+        }
+
+        function assignTask(taskIndex) {
+            const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
+            if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
+                familyMembers[familyMemberIndex].tasks.push({ ...tasks[taskIndex], completed: false });
+                tasks.splice(taskIndex, 1);
+                renderTasks();
+            }
+        }
+
+        function renderFamilyMembers() {
             const familyContainer = document.getElementById('familyMembers');
             familyContainer.innerHTML = '';
 
-            // Sort tasks to show due tasks at the top
-            const sortedTasks = tasks.sort((a, b) => isTaskDue(b) - isTaskDue(a));
+            familyMembers.forEach((member, index) => {
+                const memberDiv = document.createElement('div');
+                memberDiv.classList.add('user-profile');
 
-            sortedTasks.forEach(task => {
-                const taskDiv = document.createElement('div');
-                taskDiv.className = isTaskDue(task) ? 'due-task' : '';
-                taskDiv.innerHTML = `
-                    <div>${task.name} - $${task.value}</div>
-                    <button onclick="assignTask('${task.name}')">Assign</button>
+                memberDiv.innerHTML = `
+                    <img src="${member.photo}" alt="${member.name}'s photo">
+                    <h2>${member.name}</h2>
+                    <p>Total Earned: $${member.totalEarned}</p>
                 `;
-                familyContainer.appendChild(taskDiv);
+
+                const tasksDiv = document.createElement('div');
+                tasksDiv.innerHTML = `<strong>Tasks:</strong>`;
+                
+                member.tasks.forEach((task, taskIndex) => {
+                    const taskStatus = task.completed ? 'completed-task' : '';
+                    tasksDiv.innerHTML += `
+                        <div class="${taskStatus}">${task.name} - $${task.value}
+                            ${!task.completed ? `<button onclick="completeTask(${index}, ${taskIndex})">Complete</button>
+                            <button onclick="rejectTask(${index}, ${taskIndex})">Reject</button>` : ''}
+                        </div>
+                    `;
+                });
+
+                memberDiv.appendChild(tasksDiv);
+                familyContainer.appendChild(memberDiv);
             });
         }
 
-        function assignTask(taskName) {
-            const familyMemberName = prompt("Enter the family member's name (Mom or Dad):
+        function completeTask(memberIndex, taskIndex) {
+            const member = familyMembers[memberIndex];
+            const task = member.tasks[taskIndex];
+            if (!task.completed) {
+                task.completed = true;
+                member.totalEarned += task.value;
+                renderTasks();
+            }
+        }
+
+        function rejectTask(memberIndex, taskIndex) {
+            const member = familyMembers[memberIndex];
+            const task = member.tasks[taskIndex];
+
+            // Move the task back to the main tasks list and remove from family member
+            tasks.unshift(task);
+            member.tasks.splice(taskIndex, 1);
+            renderTasks();
+        }
+
+        renderTasks();
+    </script>
+</body>
+</html>

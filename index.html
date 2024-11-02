@@ -3,80 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Chore Tracker</title>
+    <title>Family Chore Tracker - Add Task</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         h1 { text-align: center; }
         .task, .user { margin-bottom: 15px; }
         .btn { padding: 5px 10px; margin-top: 10px; }
-        
-        /* Style for the + button */
-        .add-button { 
-            position: absolute; 
-            top: 10px; 
-            left: 10px; 
-            font-size: 24px; 
-            cursor: pointer; 
-            background-color: #007BFF; 
-            color: white; 
-            border: none; 
-            padding: 5px 10px; 
-            border-radius: 50%; 
-        }
-
-        /* Dropdown Menu */
-        .dropdown {
-            display: none;
-            position: absolute;
-            top: 40px;
-            left: 10px;
-            background-color: #f1f1f1;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            z-index: 1;
-        }
-
-        .dropdown a {
-            color: black;
-            padding: 8px 12px;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown a:hover { background-color: #ddd; }
+        .form-field { margin-bottom: 10px; }
+        .task-list { margin-top: 20px; }
     </style>
 </head>
 <body>
-    <!-- Add button and dropdown menu -->
-    <button class="add-button" onclick="toggleDropdown()">+</button>
-    <div class="dropdown" id="dropdownMenu">
-        <a href="#" onclick="showAddUser()">Add Family Member</a>
-        <a href="#" onclick="showAddTask()">Add Task</a>
-    </div>
+    <h1>Add Task</h1>
 
-    <h1>Family Chore Tracker</h1>
-    <div id="app">
-        <!-- Content for adding tasks and family members will go here -->
+    <!-- Add Task Form -->
+    <div id="addTaskForm">
+        <h2>Select Predefined Tasks</h2>
+        <div class="task-list">
+            <!-- Predefined tasks with checkboxes and value input -->
+            <div class="form-field">
+                <label><input type="checkbox" name="predefinedTask" value="Dishes"> Dishes</label>
+                <input type="number" placeholder="Value" data-task="Dishes">
+            </div>
+            <div class="form-field">
+                <label><input type="checkbox" name="predefinedTask" value="Vacuum Living Room"> Vacuum Living Room</label>
+                <input type="number" placeholder="Value" data-task="Vacuum Living Room">
+            </div>
+            <!-- Add more predefined tasks similarly -->
+            
+            <!-- List of predefined tasks -->
+            <!-- Continue listing tasks, one checkbox + input field per line -->
+            <div class="form-field">
+                <label><input type="checkbox" name="predefinedTask" value="Laundry"> Laundry</label>
+                <input type="number" placeholder="Value" data-task="Laundry">
+            </div>
+            <div class="form-field">
+                <label><input type="checkbox" name="predefinedTask" value="Clean Bedroom"> Clean Bedroom</label>
+                <input type="number" placeholder="Value" data-task="Clean Bedroom">
+            </div>
+            <div class="form-field">
+                <label><input type="checkbox" name="predefinedTask" value="Take Out Trash"> Take Out Trash</label>
+                <input type="number" placeholder="Value" data-task="Take Out Trash">
+            </div>
+            <!-- Repeat similarly for all 30 predefined tasks -->
+
+            <!-- Custom Task Option -->
+            <h2>Add Custom Task</h2>
+            <div class="form-field">
+                <input type="text" id="customTaskName" placeholder="Task Name">
+                <input type="number" id="customTaskValue" placeholder="Value">
+            </div>
+        </div>
+
+        <!-- Additional Task Settings -->
+        <h2>Task Details</h2>
+        <div class="form-field">
+            <label for="assignTo">Assign To:</label>
+            <select id="assignTo">
+                <option value="Mom">Mom</option>
+                <option value="Dad">Dad</option>
+                <option value="Liam">Liam</option>
+                <option value="Lily">Lily</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="frequency">Frequency:</label>
+            <select id="frequency">
+                <option value="One-Time">One-Time</option>
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="dueDate">Due Date:</label>
+            <input type="date" id="dueDate">
+        </div>
+
+        <button class="btn" onclick="addTasks()">Add Selected Tasks</button>
     </div>
 
     <script>
-        // Toggle dropdown visibility
-        function toggleDropdown() {
-            const dropdown = document.getElementById('dropdownMenu');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        }
+        // Function to add tasks
+        function addTasks() {
+            const selectedTasks = [];
 
-        // Show family member form
-        function showAddUser() {
-            alert('Add Family Member form goes here');
-            toggleDropdown();
-        }
+            // Collect selected predefined tasks and their values
+            document.querySelectorAll('input[name="predefinedTask"]:checked').forEach(taskCheckbox => {
+                const taskName = taskCheckbox.value;
+                const valueInput = document.querySelector(`input[data-task="${taskName}"]`);
+                const taskValue = parseFloat(valueInput.value) || 0;
+                selectedTasks.push({ name: taskName, value: taskValue });
+            });
 
-        // Show task form
-        function showAddTask() {
-            alert('Add Task form goes here');
-            toggleDropdown();
+            // Collect custom task if provided
+            const customTaskName = document.getElementById('customTaskName').value;
+            const customTaskValue = parseFloat(document.getElementById('customTaskValue').value) || 0;
+            if (customTaskName) {
+                selectedTasks.push({ name: customTaskName, value: customTaskValue });
+            }
+
+            // Get additional task details
+            const assignTo = document.getElementById('assignTo').value;
+            const frequency = document.getElementById('frequency').value;
+            const dueDate = document.getElementById('dueDate').value;
+
+            // Combine all data
+            selectedTasks.forEach(task => {
+                task.assignTo = assignTo;
+                task.frequency = frequency;
+                task.dueDate = dueDate;
+            });
+
+            // For now, log to console (could be saved to localStorage or displayed on the page)
+            console.log("Added Tasks:", selectedTasks);
+
+            // Clear the form for the next entry
+            document.getElementById('addTaskForm').reset();
         }
     </script>
 </body>

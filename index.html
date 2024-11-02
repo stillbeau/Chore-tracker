@@ -29,6 +29,7 @@
         
         .due-task { color: red; font-weight: bold; }
         .completed-task { color: green; text-decoration: line-through; }
+        .form-container { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -43,6 +44,14 @@
 
         <h2>Family Members</h2>
         <div id="familyMembers"></div>
+
+        <!-- Add Family Member Form -->
+        <div class="form-container">
+            <h3>Add Family Member</h3>
+            <label>Name: <input type="text" id="memberName"></label><br>
+            <label>Photo URL: <input type="text" id="memberPhoto"></label><br>
+            <button onclick="addFamilyMember()">Add Member</button>
+        </div>
     </div>
 
     <!-- Tasks Page -->
@@ -68,7 +77,7 @@
     </div>
 
     <script>
-        const familyMembers = [
+        let familyMembers = [
             { name: "Mom", photo: "https://via.placeholder.com/50", totalEarned: 120, tasks: [] },
             { name: "Dad", photo: "https://via.placeholder.com/50", totalEarned: 85, tasks: [] },
         ];
@@ -80,7 +89,6 @@
             { name: "Take Out Trash", value: 3, type: "time", dueTime: "20:00", inHome: false },
             { name: "Water Plants", value: 2, type: "interval", interval: 2, inHome: false },
             { name: "Clean Windows", value: 12, type: "interval", interval: 14, inHome: false },
-            // Add more predefined tasks as needed
         ];
 
         function showTasksPage() {
@@ -93,6 +101,7 @@
             document.getElementById('tasksPage').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             renderAvailableTasks();
+            renderFamilyMembers();
         }
 
         // Render predefined tasks on the Tasks Page
@@ -135,8 +144,6 @@
                     availableTasksContainer.appendChild(taskDiv);
                 }
             });
-
-            renderFamilyMembers();
         }
 
         function assignTask(taskIndex) {
@@ -160,6 +167,7 @@
                     <img src="${member.photo}" alt="${member.name}'s photo">
                     <h2>${member.name}</h2>
                     <p>Total Earned: $${member.totalEarned}</p>
+                    <button onclick="deleteFamilyMember(${index})">Delete Member</button>
                 `;
 
                 const tasksDiv = document.createElement('div');
@@ -180,20 +188,6 @@
             });
         }
 
-        function completeTask(memberIndex, taskIndex) {
-            const member = familyMembers[memberIndex];
-            const task = member.tasks[taskIndex];
-            if (!task.completed) {
-                task.completed = true;
-                member.totalEarned += task.value;
-                renderAvailableTasks();
-            }
-        }
-
-        function rejectTask(memberIndex, taskIndex) {
-            const member = familyMembers[memberIndex];
-            const task = member.tasks[taskIndex];
-
-            // Move the task back to the available tasks list and remove from family member
-            task.completed = false;
-            task.in
+        function addFamilyMember() {
+            const name = document.getElementById('memberName').value;
+           

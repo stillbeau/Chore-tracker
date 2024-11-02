@@ -61,16 +61,20 @@
             margin-right: 10px;
         }
 
-        .user-profile h2 {
-            display: inline-block;
-            vertical-align: middle;
-            margin: 0;
-        }
-
         .recent-tasks {
             color: green;
             font-style: italic;
             margin-top: 10px;
+        }
+
+        /* Form styling */
+        .form-container {
+            display: none;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
         }
     </style>
 </head>
@@ -78,8 +82,8 @@
     <!-- Add button and dropdown menu -->
     <button class="add-button" onclick="toggleDropdown()">+</button>
     <div class="dropdown" id="dropdownMenu">
-        <a href="#" onclick="showAddUser()">Add Family Member</a>
-        <a href="#" onclick="showAddTask()">Add Task</a>
+        <a href="#" onclick="showAddUserForm()">Add Family Member</a>
+        <a href="#" onclick="showAddTaskForm()">Add Task</a>
     </div>
 
     <h1>Family Chore Tracker</h1>
@@ -87,12 +91,30 @@
     <!-- Family Members Section -->
     <div id="familyMembers"></div>
 
+    <!-- Add Family Member Form -->
+    <div id="addFamilyForm" class="form-container">
+        <h2>Add Family Member</h2>
+        <label>Name: <input type="text" id="newMemberName"></label><br>
+        <label>Age: <input type="number" id="newMemberAge"></label><br>
+        <button onclick="addFamilyMember()">Add Member</button>
+        <button onclick="hideForms()">Cancel</button>
+    </div>
+
+    <!-- Add Task Form -->
+    <div id="addTaskForm" class="form-container">
+        <h2>Add Task</h2>
+        <label>Task Name: <input type="text" id="newTaskName"></label><br>
+        <label>Value: <input type="number" id="newTaskValue"></label><br>
+        <button onclick="addTask()">Add Task</button>
+        <button onclick="hideForms()">Cancel</button>
+    </div>
+
     <script>
         // Sample data for family members
         const familyMembers = [
             {
                 name: "Mom",
-                photo: "https://via.placeholder.com/50", // Placeholder image
+                photo: "https://via.placeholder.com/50",
                 totalEarned: 120,
                 completedTasks: [
                     { name: "Dishes", date: "2024-10-28", value: 5 },
@@ -108,7 +130,6 @@
                     { name: "Clean Bathroom", date: "2024-11-01", value: 7 }
                 ]
             },
-            // Add additional family members as needed
         ];
 
         // Toggle dropdown visibility
@@ -117,50 +138,79 @@
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        function showAddUser() {
-            alert("Add Family Member form goes here");
+        // Show Add Family Member form
+        function showAddUserForm() {
+            hideForms();
+            document.getElementById('addFamilyForm').style.display = 'block';
             toggleDropdown();
         }
 
-        function showAddTask() {
-            alert("Add Task form goes here");
+        // Show Add Task form
+        function showAddTaskForm() {
+            hideForms();
+            document.getElementById('addTaskForm').style.display = 'block';
             toggleDropdown();
         }
 
-        // Function to format date as 'yyyy-mm-dd'
-        function formatDate(date) {
-            return date.toISOString().split('T')[0];
+        // Hide all forms
+        function hideForms() {
+            document.getElementById('addFamilyForm').style.display = 'none';
+            document.getElementById('addTaskForm').style.display = 'none';
         }
 
-        // Function to render family members and their recent tasks
+        // Add a new family member
+        function addFamilyMember() {
+            const name = document.getElementById('newMemberName').value;
+            const age = document.getElementById('newMemberAge').value;
+
+            if (name) {
+                familyMembers.push({ name, age, photo: "https://via.placeholder.com/50", totalEarned: 0, completedTasks: [] });
+                renderFamilyMembers();
+                hideForms();
+            } else {
+                alert("Please enter a name for the family member.");
+            }
+        }
+
+        // Add a new task (for simplicity, it adds to the first family member in this example)
+        function addTask() {
+            const taskName = document.getElementById('newTaskName').value;
+            const taskValue = parseFloat(document.getElementById('newTaskValue').value);
+
+            if (taskName && !isNaN(taskValue)) {
+                const task = { name: taskName, value: taskValue, date: new Date().toISOString().split('T')[0] };
+                familyMembers[0].completedTasks.push(task); // Add to the first family member for demo
+                renderFamilyMembers();
+                hideForms();
+            } else {
+                alert("Please enter a valid task name and value.");
+            }
+        }
+
+        // Render family members and their recent tasks
         function renderFamilyMembers() {
             const familyContainer = document.getElementById('familyMembers');
-            familyContainer.innerHTML = ''; // Clear container
+            familyContainer.innerHTML = '';
 
-            // Get today's date and the date one week ago
             const today = new Date();
             const lastWeek = new Date();
             lastWeek.setDate(today.getDate() - 7);
 
             familyMembers.forEach(member => {
-                // Create a container for each member
                 const memberDiv = document.createElement('div');
                 memberDiv.classList.add('user-profile');
 
-                // Display member's name, photo, and total earnings
                 memberDiv.innerHTML = `
                     <img src="${member.photo}" alt="${member.name}'s photo">
                     <h2>${member.name}</h2>
                     <p>Total Earned: $${member.totalEarned}</p>
                 `;
 
-                // Filter tasks completed within the last week
                 const recentTasks = member.completedTasks.filter(task => {
                     const taskDate = new Date(task.date);
                     return taskDate >= lastWeek && taskDate <= today;
                 });
 
-                // Display recent tasks (only if completed within the last week)
                 if (recentTasks.length > 0) {
                     const recentTasksDiv = document.createElement('div');
                     recentTasksDiv.classList.add('recent-tasks');
@@ -175,12 +225,10 @@
                     memberDiv.appendChild(recentTasksDiv);
                 }
 
-                // Append each member's section to the main container
                 familyContainer.appendChild(memberDiv);
             });
         }
 
-        // Render family members when page loads
         renderFamilyMembers();
     </script>
 </body>

@@ -91,45 +91,39 @@
     <!-- Family Members Section -->
     <div id="familyMembers"></div>
 
-    <!-- Add Family Member Form -->
-    <div id="addFamilyForm" class="form-container">
-        <h2>Add Family Member</h2>
-        <label>Name: <input type="text" id="newMemberName"></label><br>
-        <label>Age: <input type="number" id="newMemberAge"></label><br>
-        <button onclick="addFamilyMember()">Add Member</button>
-        <button onclick="hideForms()">Cancel</button>
-    </div>
-
     <!-- Add Task Form -->
     <div id="addTaskForm" class="form-container">
         <h2>Add Task</h2>
-        <label>Task Name: <input type="text" id="newTaskName"></label><br>
-        <label>Value: <input type="number" id="newTaskValue"></label><br>
-        <button onclick="addTask()">Add Task</button>
+        
+        <!-- Predefined Task List -->
+        <h3>Predefined Tasks</h3>
+        <div id="predefinedTasks">
+            <!-- Placeholder for predefined tasks -->
+        </div>
+
+        <!-- Custom Task Option -->
+        <h3>Custom Task</h3>
+        <label>Task Name: <input type="text" id="customTaskName"></label><br>
+        <label>Value: <input type="number" id="customTaskValue"></label><br>
+        <button onclick="addCustomTask()">Add Custom Task</button>
         <button onclick="hideForms()">Cancel</button>
     </div>
 
     <script>
         // Sample data for family members
         const familyMembers = [
-            {
-                name: "Mom",
-                photo: "https://via.placeholder.com/50",
-                totalEarned: 120,
-                completedTasks: [
-                    { name: "Dishes", date: "2024-10-28", value: 5 },
-                    { name: "Laundry", date: "2024-11-01", value: 8 }
-                ]
-            },
-            {
-                name: "Dad",
-                photo: "https://via.placeholder.com/50",
-                totalEarned: 85,
-                completedTasks: [
-                    { name: "Vacuum Living Room", date: "2024-10-29", value: 10 },
-                    { name: "Clean Bathroom", date: "2024-11-01", value: 7 }
-                ]
-            },
+            { name: "Mom", photo: "https://via.placeholder.com/50", totalEarned: 120, completedTasks: [] },
+            { name: "Dad", photo: "https://via.placeholder.com/50", totalEarned: 85, completedTasks: [] },
+        ];
+
+        // Predefined tasks
+        const predefinedTasks = [
+            { name: "Dishes", value: 5 },
+            { name: "Vacuum Living Room", value: 10 },
+            { name: "Laundry", value: 8 },
+            { name: "Clean Bedroom", value: 7 },
+            { name: "Take Out Trash", value: 3 },
+            // ...add up to 30 tasks as needed
         ];
 
         // Toggle dropdown visibility
@@ -138,49 +132,56 @@
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        // Show Add Family Member form
-        function showAddUserForm() {
-            hideForms();
-            document.getElementById('addFamilyForm').style.display = 'block';
-            toggleDropdown();
-        }
-
         // Show Add Task form
         function showAddTaskForm() {
             hideForms();
             document.getElementById('addTaskForm').style.display = 'block';
+            renderPredefinedTasks();
             toggleDropdown();
         }
 
         // Hide all forms
         function hideForms() {
-            document.getElementById('addFamilyForm').style.display = 'none';
             document.getElementById('addTaskForm').style.display = 'none';
         }
 
-        // Add a new family member
-        function addFamilyMember() {
-            const name = document.getElementById('newMemberName').value;
-            const age = document.getElementById('newMemberAge').value;
+        // Render predefined tasks
+        function renderPredefinedTasks() {
+            const predefinedTasksContainer = document.getElementById('predefinedTasks');
+            predefinedTasksContainer.innerHTML = '';
 
-            if (name) {
-                familyMembers.push({ name, age, photo: "https://via.placeholder.com/50", totalEarned: 0, completedTasks: [] });
-                renderFamilyMembers();
-                hideForms();
-            } else {
-                alert("Please enter a name for the family member.");
+            predefinedTasks.forEach((task, index) => {
+                const taskDiv = document.createElement('div');
+                taskDiv.innerHTML = `
+                    <label><input type="checkbox" id="task-${index}"> ${task.name} - $${task.value}</label>
+                    <select onchange="assignTaskToMember(${index})">
+                        <option value="">Assign to...</option>
+                        ${familyMembers.map((member, i) => `<option value="${i}">${member.name}</option>`).join('')}
+                    </select>
+                `;
+                predefinedTasksContainer.appendChild(taskDiv);
+            });
+        }
+
+        // Assign task to family member when selected from dropdown
+        function assignTaskToMember(taskIndex) {
+            const taskCheckbox = document.getElementById(`task-${taskIndex}`);
+            if (taskCheckbox.checked) {
+                const memberIndex = document.querySelector(`#task-${taskIndex} + select`).value;
+                if (memberIndex !== "") {
+                    familyMembers[memberIndex].completedTasks.push(predefinedTasks[taskIndex]);
+                    renderFamilyMembers();
+                }
             }
         }
 
-        // Add a new task (for simplicity, it adds to the first family member in this example)
-        function addTask() {
-            const taskName = document.getElementById('newTaskName').value;
-            const taskValue = parseFloat(document.getElementById('newTaskValue').value);
-
+        // Add custom task
+        function addCustomTask() {
+            const taskName = document.getElementById('customTaskName').value;
+            const taskValue = parseFloat(document.getElementById('customTaskValue').value);
             if (taskName && !isNaN(taskValue)) {
-                const task = { name: taskName, value: taskValue, date: new Date().toISOString().split('T')[0] };
-                familyMembers[0].completedTasks.push(task); // Add to the first family member for demo
-                renderFamilyMembers();
+                predefinedTasks.unshift({ name: taskName, value: taskValue });
+                renderPredefinedTasks();
                 hideForms();
             } else {
                 alert("Please enter a valid task name and value.");
@@ -192,10 +193,6 @@
             const familyContainer = document.getElementById('familyMembers');
             familyContainer.innerHTML = '';
 
-            const today = new Date();
-            const lastWeek = new Date();
-            lastWeek.setDate(today.getDate() - 7);
-
             familyMembers.forEach(member => {
                 const memberDiv = document.createElement('div');
                 memberDiv.classList.add('user-profile');
@@ -204,26 +201,11 @@
                     <img src="${member.photo}" alt="${member.name}'s photo">
                     <h2>${member.name}</h2>
                     <p>Total Earned: $${member.totalEarned}</p>
+                    <div class="recent-tasks">
+                        <strong>Recently Completed Tasks:</strong>
+                        ${member.completedTasks.map(task => `<div>${task.name} ($${task.value})</div>`).join('')}
+                    </div>
                 `;
-
-                const recentTasks = member.completedTasks.filter(task => {
-                    const taskDate = new Date(task.date);
-                    return taskDate >= lastWeek && taskDate <= today;
-                });
-
-                if (recentTasks.length > 0) {
-                    const recentTasksDiv = document.createElement('div');
-                    recentTasksDiv.classList.add('recent-tasks');
-                    recentTasksDiv.innerHTML = `<strong>Recently Completed Tasks:</strong>`;
-
-                    recentTasks.forEach(task => {
-                        const taskDiv = document.createElement('div');
-                        taskDiv.textContent = `${task.name} ($${task.value})`;
-                        recentTasksDiv.appendChild(taskDiv);
-                    });
-
-                    memberDiv.appendChild(recentTasksDiv);
-                }
 
                 familyContainer.appendChild(memberDiv);
             });

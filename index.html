@@ -23,6 +23,13 @@
         }
         .task-item, .user-profile { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; }
         
+        .user-profile img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
         .due-task { color: red; font-weight: bold; }
         .completed-task { color: green; text-decoration: line-through; }
         .form-container { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
@@ -62,6 +69,7 @@
         <div id="familyForm" class="form-container" style="display: none;">
             <h3>Add Family Member</h3>
             <label>Name: <input type="text" id="memberName"></label><br>
+            <label>Birthdate: <input type="date" id="memberBirthdate"></label><br>
             <label>Photo URL: <input type="text" id="memberPhoto" placeholder="Optional"></label><br>
             <button onclick="addFamilyMember()">Add Member</button>
             <button onclick="toggleFamilyForm()">Cancel</button>
@@ -71,13 +79,13 @@
 
     <script>
         let familyMembers = [
-            { name: "Mom", photo: "https://via.placeholder.com/50", totalEarned: 120, tasks: [] },
-            { name: "Dad", photo: "https://via.placeholder.com/50", totalEarned: 85, tasks: [] },
+            { name: "Mom", birthdate: "1980-05-15", photo: "https://via.placeholder.com/50", totalEarned: 120, tasks: [] },
+            { name: "Dad", birthdate: "1982-08-23", photo: "https://via.placeholder.com/50", totalEarned: 85, tasks: [] },
         ];
 
         const predefinedTasks = [
             { name: "Load the Dishwasher", value: 5, type: "time", dueTime: "19:00", inHome: true },
-            { name: "Clean the Washroom", value: 10, type: "interval", interval: 7, inHome: true }
+            { name: "Clean the Washroom", value: 10, type: "interval", interval: 7, lastCompleted: null, inHome: true }
         ];
 
         // Toggle the Task Form
@@ -92,6 +100,18 @@
             familyForm.style.display = familyForm.style.display === 'none' ? 'block' : 'none';
         }
 
+        // Calculate age from birthdate
+        function calculateAge(birthdate) {
+            const today = new Date();
+            const birthDate = new Date(birthdate);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
         // Add a new task to the available tasks
         function addCustomTask() {
             const name = document.getElementById('customTaskName').value;
@@ -104,7 +124,7 @@
                 newTask = { name, value, type: "time", dueTime, inHome: true };
             } else {
                 const interval = parseInt(document.getElementById('dueInterval').value);
-                newTask = { name, value, type: "interval", interval, inHome: true };
+                newTask = { name, value, type: "interval", interval, lastCompleted: null, inHome: true };
             }
 
             predefinedTasks.push(newTask);
@@ -115,19 +135,33 @@
         // Add a new family member
         function addFamilyMember() {
             const name = document.getElementById('memberName').value;
+            const birthdate = document.getElementById('memberBirthdate').value;
             const photo = document.getElementById('memberPhoto').value || "https://via.placeholder.com/50";
-            familyMembers.push({ name, photo, totalEarned: 0, tasks: [] });
+            familyMembers.push({ name, birthdate, photo, totalEarned: 0, tasks: [] });
             renderFamilyMembers();
             toggleFamilyForm();
         }
 
-        // Render available tasks on the Home Screen
+        // Check if interval tasks are due based on the last completed date and interval
+        function isTaskDue(task) {
+            if (task.type === "time") {
+                return true; // Time-based tasks are displayed daily
+            } else if (task.type === "interval" && task.lastCompleted) {
+                const now = new Date();
+                const lastCompletedDate = new Date(task.lastCompleted);
+                const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
+                return daysSinceCompleted >= task.interval;
+            }
+            return task.type === "interval" && !task.lastCompleted;
+        }
+
+        // Render available tasks on the Home Screen, including due interval tasks
         function renderAvailableTasks() {
             const availableTasksContainer = document.getElementById('availableTasks');
             availableTasksContainer.innerHTML = '';
 
             predefinedTasks.forEach((task, index) => {
-                if (task.inHome) {
+                if (task.inHome && isTaskDue(task)) {
                     const taskDiv = document.createElement('div');
                     taskDiv.classList.add('due-task');
                     taskDiv.innerHTML = `
@@ -143,55 +177,4 @@
             const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
             if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
                 familyMembers[familyMemberIndex].tasks.push({ ...predefinedTasks[taskIndex], completed: false });
-                renderFamilyMembers();
-            }
-        }
-
-        // Render family members on the Home Screen
-        function renderFamilyMembers() {
-            const familyContainer = document.getElementById('familyMembers');
-            familyContainer.innerHTML = '';
-
-            familyMembers.forEach((member, index) => {
-                const memberDiv = document.createElement('div');
-                memberDiv.classList.add('user-profile');
-
-                memberDiv.innerHTML = `
-                    <img src="${member.photo}" alt="${member.name}'s photo">
-                    <h2>${member.name}</h2>
-                    <p>Total Earned: $${member.totalEarned}</p>
-                `;
-
-                const tasksDiv = document.createElement('div');
-                tasksDiv.innerHTML = `<strong>Tasks:</strong>`;
-                
-                member.tasks.forEach((task, taskIndex) => {
-                    const taskStatus = task.completed ? 'completed-task' : '';
-                    tasksDiv.innerHTML += `
-                        <div class="${taskStatus}">${task.name} - $${task.value}
-                            ${!task.completed ? `<button onclick="completeTask(${index}, ${taskIndex})">Complete</button>` : ''}
-                        </div>
-                    `;
-                });
-
-                memberDiv.appendChild(tasksDiv);
-                familyContainer.appendChild(memberDiv);
-            });
-        }
-
-        // Mark a task as complete
-        function completeTask(memberIndex, taskIndex) {
-            const member = familyMembers[memberIndex];
-            const task = member.tasks[taskIndex];
-            if (!task.completed) {
-                task.completed = true;
-                member.totalEarned += task.value;
-                renderFamilyMembers();
-            }
-        }
-
-        renderAvailableTasks();
-        renderFamilyMembers();
-    </script>
-</body>
-</html>
+                if (predefinedTasks[taskIndex].type === "interval")

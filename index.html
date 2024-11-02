@@ -49,6 +49,21 @@
     <div id="tasksPage" style="display: none;">
         <h2>Tasks Page</h2>
         <div id="predefinedTasks"></div>
+        
+        <!-- Custom Task Form -->
+        <h3>Add Custom Task</h3>
+        <label>Task Name: <input type="text" id="customTaskName"></label><br>
+        <label>Value: <input type="number" id="customTaskValue"></label><br>
+        <label>Due Type:
+            <select id="dueType" onchange="toggleDueOptions()">
+                <option value="time">Due Time (Daily)</option>
+                <option value="interval">Due Every X Days</option>
+            </select>
+        </label><br>
+        <label id="dueTimeLabel">Due Time: <input type="time" id="dueTime" value="19:00"></label><br>
+        <label id="intervalLabel" style="display: none;">Interval (days): <input type="number" id="dueInterval" min="1" value="7"></label><br>
+        <button onclick="addCustomTask()">Add Custom Task</button>
+        
         <button onclick="showHomeScreen()">Back to Home</button>
     </div>
 
@@ -60,7 +75,12 @@
 
         const predefinedTasks = [
             { name: "Load the Dishwasher", value: 5, type: "time", dueTime: "19:00", inHome: false },
-            { name: "Clean the Washroom", value: 10, type: "interval", interval: 7, inHome: false }
+            { name: "Clean the Washroom", value: 10, type: "interval", interval: 7, inHome: false },
+            { name: "Vacuum Living Room", value: 8, type: "time", dueTime: "18:00", inHome: false },
+            { name: "Take Out Trash", value: 3, type: "time", dueTime: "20:00", inHome: false },
+            { name: "Water Plants", value: 2, type: "interval", interval: 2, inHome: false },
+            { name: "Clean Windows", value: 12, type: "interval", interval: 14, inHome: false },
+            // Add more predefined tasks as needed
         ];
 
         function showTasksPage() {
@@ -176,13 +196,4 @@
 
             // Move the task back to the available tasks list and remove from family member
             task.completed = false;
-            task.inHome = true;
-            predefinedTasks.push(task);
-            member.tasks.splice(taskIndex, 1);
-            renderAvailableTasks();
-        }
-
-        showHomeScreen();
-    </script>
-</body>
-</html>
+            task.in

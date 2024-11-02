@@ -9,7 +9,7 @@
         h1 { text-align: center; }
         .btn { padding: 5px 10px; margin-top: 10px; }
         
-        /* Style for the + button */
+        /* Style for the + button and dropdown menu */
         .add-button { 
             position: absolute; 
             top: 10px; 
@@ -22,6 +22,27 @@
             padding: 5px 10px; 
             border-radius: 50%; 
         }
+        
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown a {
+            color: black;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown a:hover { background-color: #ddd; }
 
         /* Section styles */
         .section { margin-bottom: 20px; }
@@ -33,8 +54,13 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <button class="add-button" onclick="showTasksPage()">Tasks Page</button>
+    <!-- + Button with Dropdown Menu -->
+    <button class="add-button" onclick="toggleDropdown()">+</button>
+    <div class="dropdown" id="dropdownMenu">
+        <a href="#" onclick="showTasksPage()">Add Chore (Tasks Page)</a>
+        <a href="#" onclick="showAddFamilyForm()">Add Family Member</a>
+    </div>
+
     <h1>Family Chore Tracker</h1>
 
     <!-- Home Screen -->
@@ -44,14 +70,6 @@
 
         <h2>Family Members</h2>
         <div id="familyMembers"></div>
-
-        <!-- Add Family Member Form -->
-        <div class="form-container">
-            <h3>Add Family Member</h3>
-            <label>Name: <input type="text" id="memberName"></label><br>
-            <label>Photo URL: <input type="text" id="memberPhoto"></label><br>
-            <button onclick="addFamilyMember()">Add Member</button>
-        </div>
     </div>
 
     <!-- Tasks Page -->
@@ -72,8 +90,16 @@
         <label id="dueTimeLabel">Due Time: <input type="time" id="dueTime" value="19:00"></label><br>
         <label id="intervalLabel" style="display: none;">Interval (days): <input type="number" id="dueInterval" min="1" value="7"></label><br>
         <button onclick="addCustomTask()">Add Custom Task</button>
-        
         <button onclick="showHomeScreen()">Back to Home</button>
+    </div>
+
+    <!-- Add Family Member Form -->
+    <div id="addFamilyForm" class="form-container" style="display: none;">
+        <h3>Add Family Member</h3>
+        <label>Name: <input type="text" id="memberName"></label><br>
+        <label>Photo URL: <input type="text" id="memberPhoto"></label><br>
+        <button onclick="addFamilyMember()">Add Member</button>
+        <button onclick="showHomeScreen()">Cancel</button>
     </div>
 
     <script>
@@ -91,14 +117,29 @@
             { name: "Clean Windows", value: 12, type: "interval", interval: 14, inHome: false },
         ];
 
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
         function showTasksPage() {
             document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('addFamilyForm').style.display = 'none';
             document.getElementById('tasksPage').style.display = 'block';
             renderPredefinedTasks();
+            toggleDropdown(); // Hide dropdown after selection
+        }
+
+        function showAddFamilyForm() {
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('tasksPage').style.display = 'none';
+            document.getElementById('addFamilyForm').style.display = 'block';
+            toggleDropdown(); // Hide dropdown after selection
         }
 
         function showHomeScreen() {
             document.getElementById('tasksPage').style.display = 'none';
+            document.getElementById('addFamilyForm').style.display = 'none';
             document.getElementById('homeScreen').style.display = 'block';
             renderAvailableTasks();
             renderFamilyMembers();
@@ -147,47 +188,3 @@
         }
 
         function assignTask(taskIndex) {
-            const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
-            if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
-                familyMembers[familyMemberIndex].tasks.push({ ...predefinedTasks[taskIndex], completed: false });
-                predefinedTasks[taskIndex].inHome = false;
-                renderAvailableTasks();
-            }
-        }
-
-        function renderFamilyMembers() {
-            const familyContainer = document.getElementById('familyMembers');
-            familyContainer.innerHTML = '';
-
-            familyMembers.forEach((member, index) => {
-                const memberDiv = document.createElement('div');
-                memberDiv.classList.add('user-profile');
-
-                memberDiv.innerHTML = `
-                    <img src="${member.photo}" alt="${member.name}'s photo">
-                    <h2>${member.name}</h2>
-                    <p>Total Earned: $${member.totalEarned}</p>
-                    <button onclick="deleteFamilyMember(${index})">Delete Member</button>
-                `;
-
-                const tasksDiv = document.createElement('div');
-                tasksDiv.innerHTML = `<strong>Tasks:</strong>`;
-                
-                member.tasks.forEach((task, taskIndex) => {
-                    const taskStatus = task.completed ? 'completed-task' : '';
-                    tasksDiv.innerHTML += `
-                        <div class="${taskStatus}">${task.name} - $${task.value}
-                            ${!task.completed ? `<button onclick="completeTask(${index}, ${taskIndex})">Complete</button>
-                            <button onclick="rejectTask(${index}, ${taskIndex})">Reject</button>` : ''}
-                        </div>
-                    `;
-                });
-
-                memberDiv.appendChild(tasksDiv);
-                familyContainer.appendChild(memberDiv);
-            });
-        }
-
-        function addFamilyMember() {
-            const name = document.getElementById('memberName').value;
-           

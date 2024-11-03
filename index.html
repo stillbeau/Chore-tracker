@@ -554,4 +554,121 @@
     <button onclick="saveTaskChanges()">Save Changes</button>
     <button onclick="document.getElementById('editTaskForm').style.display = 'none'">Cancel</button>
 </div>
+<!-- Add Task Form (appears when the + button is clicked) -->
+<div id="taskSetupForm" class="form-container" style="display: none;">
+    <h3>Set Up Household Chores</h3>
+    <div id="taskList">
+        <!-- Dynamically generated list of chores will go here -->
+    </div>
+    <button onclick="saveTasks()">Save Chores</button>
+    <button onclick="document.getElementById('taskSetupForm').style.display = 'none'">Cancel</button>
+</div>
 
+<script>
+    // Array of predefined common household chores
+    const commonChores = [
+        "Wash Dishes", "Vacuum Living Room", "Take Out Trash", "Mop Floors",
+        "Clean Bathroom", "Dust Shelves", "Laundry", "Water Plants",
+        "Wipe Kitchen Counters", "Clean Windows", "Organize Closet",
+        "Change Bed Sheets", "Clean Refrigerator", "Sweep Porch",
+        "Take Out Recycling", "Wipe Down Appliances", "Clean Mirrors",
+        "Tidy Up Living Room", "Sanitize Door Handles", "Organize Pantry"
+    ];
+
+    const predefinedTasks = []; // To store the configured tasks
+
+    // Function to open the task setup form with common chores
+    function openTaskSetupForm() {
+        const taskList = document.getElementById('taskList');
+        taskList.innerHTML = ''; // Clear any existing chores
+
+        // Generate rows for each common chore with input fields for value and interval
+        commonChores.forEach((chore, index) => {
+            const taskRow = document.createElement('div');
+            taskRow.classList.add('task-row');
+            taskRow.innerHTML = `
+                <label>${chore}</label>
+                <input type="number" id="taskValue-${index}" placeholder="Value ($)">
+                <input type="number" id="taskInterval-${index}" placeholder="Days Interval" min="1" max="30">
+            `;
+            taskList.appendChild(taskRow);
+        });
+
+        document.getElementById('taskSetupForm').style.display = 'block';
+    }
+
+    // Function to save configured tasks
+    function saveTasks() {
+        predefinedTasks.length = 0; // Clear previous tasks
+
+        commonChores.forEach((chore, index) => {
+            const value = document.getElementById(`taskValue-${index}`).value;
+            const interval = document.getElementById(`taskInterval-${index}`).value;
+
+            // Only add the task if value and interval are set
+            if (value && interval) {
+                predefinedTasks.push({
+                    name: chore,
+                    value: parseFloat(value),
+                    interval: parseInt(interval),
+                    lastCompleted: null, // Initial last completed is null
+                    inHome: true
+                });
+            }
+        });
+
+        renderAvailableTasks(); // Refresh the tasks on the main screen
+        document.getElementById('taskSetupForm').style.display = 'none'; // Hide the form
+    }
+
+    // Render available tasks on the Home Screen
+    function renderAvailableTasks() {
+        const availableTasksContainer = document.getElementById('availableTasks');
+        availableTasksContainer.innerHTML = '';
+
+        predefinedTasks.forEach((task, index) => {
+            if (isTaskDue(task)) {
+                const taskDiv = document.createElement('div');
+                taskDiv.classList.add('due-task');
+                taskDiv.innerHTML = `
+                    <div>${task.name} - $${task.value} (Every ${task.interval} days)</div>
+                    <button onclick="completeTask(${index})">Complete</button>
+                    <button onclick="deleteTask(${index})">Delete</button>
+                `;
+                availableTasksContainer.appendChild(taskDiv);
+            }
+        });
+    }
+
+    // Check if interval tasks are due based on the last completed date and interval
+    function isTaskDue(task) {
+        if (task.lastCompleted) {
+            const now = new Date();
+            const lastCompletedDate = new Date(task.lastCompleted);
+            const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
+            return daysSinceCompleted >= task.interval;
+        }
+        return true; // If never completed, it should be due
+    }
+
+    // Function to delete a task
+    function deleteTask(index) {
+        const confirmDelete = confirm(`Are you sure you want to delete the task "${predefinedTasks[index].name}"?`);
+        if (confirmDelete) {
+            predefinedTasks.splice(index, 1); // Remove the task from the array
+            renderAvailableTasks(); // Refresh the displayed list
+        }
+    }
+
+    // Function to mark a task as completed and set the last completed date
+    function completeTask(index) {
+        predefinedTasks[index].lastCompleted = new Date().toISOString(); // Store the current date as last completed
+        renderAvailableTasks(); // Refresh the displayed list
+    }
+
+    // Initialize with empty task list
+    document.getElementById('taskSetupForm').style.display = 'none';
+</script>
+
+<button onclick="openTaskSetupForm()">+</button> <!-- Open Task Setup Form Button -->
+<div id="availableTasks"></div> <!-- Container to display available tasks -->

@@ -144,3 +144,153 @@
     </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Chore Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; }
+        .form-container { padding: 10px; border: 1px solid #ddd; margin-top: 10px; display: none; }
+        .task-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .btn { cursor: pointer; color: white; background-color: #007BFF; border: none; padding: 5px 10px; border-radius: 5px; }
+        .user-profile { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Family Chore Tracker</h1>
+
+    <!-- Family Member Form -->
+    <div id="familyMemberForm" class="form-container">
+        <h3>Add Family Member</h3>
+        <label>Name: <input type="text" id="memberName"></label><br>
+        <label>Birthdate: <input type="date" id="memberBirthdate"></label><br>
+        <label>Photo URL: <input type="text" id="memberPhoto" placeholder="Optional"></label><br>
+        <button class="btn" onclick="addFamilyMember()">Add Member</button>
+        <button class="btn" style="background-color: #dc3545;" onclick="closeFamilyMemberForm()">Cancel</button>
+    </div>
+
+    <!-- Button to Open Family Member Form -->
+    <button class="btn" onclick="openFamilyMemberForm()">Add New Family Member</button>
+
+    <!-- Container to display family members -->
+    <h2>Family Members</h2>
+    <div id="familyMembers"></div>
+
+    <script>
+        let familyMembers = [];
+
+        // Function to open the family member form
+        function openFamilyMemberForm() {
+            document.getElementById('familyMemberForm').style.display = 'block';
+        }
+
+        // Function to close the family member form
+        function closeFamilyMemberForm() {
+            document.getElementById('familyMemberForm').style.display = 'none';
+        }
+
+        // Function to add a new family member
+        function addFamilyMember() {
+            const name = document.getElementById('memberName').value;
+            const birthdate = document.getElementById('memberBirthdate').value;
+            const photo = document.getElementById('memberPhoto').value || "https://via.placeholder.com/50";
+
+            const newMember = { name, birthdate, photo, totalEarned: 0, tasks: [] };
+            familyMembers.push(newMember);
+            renderFamilyMembers();
+            closeFamilyMemberForm(); // Hide the form after adding
+        }
+
+        // Function to delete a family member with confirmation
+        function deleteFamilyMember(index) {
+            const confirmDelete = confirm(`Are you sure you want to delete ${familyMembers[index].name}?`);
+            if (confirmDelete) {
+                familyMembers.splice(index, 1); // Remove the member from the array
+                renderFamilyMembers(); // Refresh the displayed list
+            }
+        }
+
+        // Function to open the edit form with the selected family member's information
+        function editFamilyMember(index) {
+            const member = familyMembers[index];
+            document.getElementById('editMemberIndex').value = index;
+            document.getElementById('editMemberName').value = member.name;
+            document.getElementById('editMemberBirthdate').value = member.birthdate;
+            document.getElementById('editMemberPhoto').value = member.photo;
+            document.getElementById('editFamilyForm').style.display = 'block';
+
+            // Insert the edit form below the selected member
+            const memberDiv = document.getElementById(`familyMember-${index}`);
+            memberDiv.insertAdjacentElement('afterend', document.getElementById('editFamilyForm'));
+        }
+
+        // Function to save changes to the family member
+        function saveFamilyMemberChanges() {
+            const index = document.getElementById('editMemberIndex').value;
+            const name = document.getElementById('editMemberName').value;
+            const birthdate = document.getElementById('editMemberBirthdate').value;
+            const photo = document.getElementById('editMemberPhoto').value || "https://via.placeholder.com/50";
+
+            // Update the family member's information
+            familyMembers[index].name = name;
+            familyMembers[index].birthdate = birthdate;
+            familyMembers[index].photo = photo;
+
+            renderFamilyMembers(); // Refresh the family members list
+            document.getElementById('editFamilyForm').style.display = 'none'; // Hide the edit form
+        }
+
+        // Render family members on the Home Screen
+        function renderFamilyMembers() {
+            const familyContainer = document.getElementById('familyMembers');
+            familyContainer.innerHTML = '';
+
+            familyMembers.forEach((member, index) => {
+                const age = calculateAge(member.birthdate);
+                const memberDiv = document.createElement('div');
+                memberDiv.classList.add('user-profile');
+                memberDiv.id = `familyMember-${index}`; // Unique ID for each family member div
+
+                memberDiv.innerHTML = `
+                    <img src="${member.photo}" alt="${member.name}'s photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+                    <h2>${member.name} (Age: ${age})</h2>
+                    <p>Total Earned: $${member.totalEarned}</p>
+                    <button onclick="editFamilyMember(${index})">Edit</button>
+                    <button onclick="deleteFamilyMember(${index})">Delete</button>
+                `;
+
+                familyContainer.appendChild(memberDiv);
+            });
+        }
+
+        // Calculate age from birthdate
+        function calculateAge(birthdate) {
+            const today = new Date();
+            const birthDate = new Date(birthdate);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Edit Family Member Inline Form
+    </script>
+
+    <!-- Edit Family Member Form -->
+    <div id="editFamilyForm" class="form-container" style="display: none;">
+        <h3>Edit Family Member</h3>
+        <input type="hidden" id="editMemberIndex">
+        <label>Name: <input type="text" id="editMemberName"></label><br>
+        <label>Birthdate: <input type="date" id="editMemberBirthdate"></label><br>
+        <label>Photo URL: <input type="text" id="editMemberPhoto" placeholder="Optional"></label><br>
+        <button onclick="saveFamilyMemberChanges()">Save Changes</button>
+        <button onclick="document.getElementById('editFamilyForm').style.display = 'none'">Cancel</button>
+    </div>
+</body>
+</html>

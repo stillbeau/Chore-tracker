@@ -229,4 +229,79 @@
     renderAvailableTasks();
     renderFamilyMembers();
 </script>
+<script>
+    // Toggle the Task Form visibility
+    function toggleTaskForm() {
+        const taskForm = document.getElementById('taskForm');
+        if (taskForm.style.display === 'none' || taskForm.style.display === '') {
+            taskForm.style.display = 'block';
+            console.log("Task form opened.");
+        } else {
+            taskForm.style.display = 'none';
+            console.log("Task form closed.");
+        }
+    }
+
+    // Toggle the Family Form visibility
+    function toggleFamilyForm() {
+        const familyForm = document.getElementById('familyForm');
+        if (familyForm.style.display === 'none' || familyForm.style.display === '') {
+            familyForm.style.display = 'block';
+            console.log("Family form opened.");
+        } else {
+            familyForm.style.display = 'none';
+            console.log("Family form closed.");
+        }
+    }
+
+    // Check if interval tasks are due based on the last completed date and interval
+    function isTaskDue(task) {
+        if (task.type === "time") {
+            return true; // Daily tasks are always shown
+        } else if (task.type === "interval" && task.lastCompleted) {
+            const now = new Date();
+            const lastCompletedDate = new Date(task.lastCompleted);
+            const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
+            return daysSinceCompleted >= task.interval;
+        }
+        return task.type === "interval" && !task.lastCompleted;
+    }
+
+    // Render available tasks on the Home Screen, including due interval tasks
+    function renderAvailableTasks() {
+        const availableTasksContainer = document.getElementById('availableTasks');
+        availableTasksContainer.innerHTML = '';
+
+        predefinedTasks.forEach((task, index) => {
+            if (task.inHome && isTaskDue(task)) {
+                const taskDiv = document.createElement('div');
+                taskDiv.classList.add('due-task');
+                taskDiv.innerHTML = `
+                    <div>${task.name} - $${task.value}</div>
+                    <button onclick="assignTask(${index})">Assign</button>
+                `;
+                availableTasksContainer.appendChild(taskDiv);
+            }
+        });
+    }
+
+    // When assigning a task, update the last completed date for interval tasks
+    function assignTask(taskIndex) {
+        const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
+        if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
+            const task = predefinedTasks[taskIndex];
+            familyMembers[familyMemberIndex].tasks.push({ ...task, completed: false });
+
+            // Update lastCompleted if the task is interval-based
+            if (task.type === "interval") {
+                task.lastCompleted = new Date().toISOString(); // Store the last completed date
+            }
+            renderFamilyMembers();
+        }
+    }
+
+    renderAvailableTasks();
+    renderFamilyMembers();
+</script>
+
             

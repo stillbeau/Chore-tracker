@@ -21,6 +21,7 @@
         <h3>Set Up Household Chores</h3>
         <div id="taskList"></div>
         <button class="btn" onclick="saveTasks()">Save Chores</button>
+        <button class="btn" onclick="addCustomTask()">Add Custom Task</button>
         <button class="btn" style="background-color: #dc3545;" onclick="closeTaskSetupForm()">Cancel</button>
     </div>
 
@@ -78,6 +79,20 @@
             document.getElementById('taskSetupForm').style.display = 'block';
         }
 
+        // Function to add custom tasks
+        function addCustomTask() {
+            const taskList = document.getElementById('taskList');
+            const taskRow = document.createElement('div');
+            const index = predefinedTasks.length + taskList.children.length;
+            taskRow.classList.add('task-row');
+            taskRow.innerHTML = `
+                <input type="text" placeholder="Custom Task Name" id="customTaskName-${index}">
+                <input type="number" id="taskValue-${index}" placeholder="Value ($)" style="width: 70px;">
+                <input type="number" id="taskInterval-${index}" placeholder="Days" min="1" max="30" style="width: 60px;">
+            `;
+            taskList.appendChild(taskRow);
+        }
+
         // Function to close the task setup form
         function closeTaskSetupForm() {
             document.getElementById('taskSetupForm').style.display = 'none';
@@ -89,12 +104,13 @@
 
             const commonChores = document.querySelectorAll("#taskList .task-row");
             commonChores.forEach((row, index) => {
+                const taskName = row.querySelector(`input[type="text"]`) ? row.querySelector(`input[type="text"]`).value : row.querySelector("span").textContent;
                 const value = document.getElementById(`taskValue-${index}`).value;
                 const interval = document.getElementById(`taskInterval-${index}`).value;
 
-                if (value && interval) {
+                if (taskName && value && interval) {
                     predefinedTasks.push({
-                        name: row.querySelector("span").textContent,
+                        name: taskName,
                         value: parseFloat(value),
                         interval: parseInt(interval),
                         lastCompleted: null,
@@ -118,10 +134,25 @@
                 taskDiv.innerHTML = `
                     <div>${task.name} - $${task.value} (Every ${task.interval} days)</div>
                     <button onclick="assignTask(${index})">Assign</button>
+                    <button onclick="editTask(${index})">Edit</button>
                     <button onclick="deleteTask(${index})">Delete</button>
                 `;
                 availableTasksContainer.appendChild(taskDiv);
             });
+        }
+
+        // Function to edit a task
+        function editTask(taskIndex) {
+            const task = predefinedTasks[taskIndex];
+            const newName = prompt("Edit Task Name:", task.name);
+            const newValue = prompt("Edit Task Value:", task.value);
+            const newInterval = prompt("Edit Task Interval (days):", task.interval);
+            if (newName && newValue && newInterval) {
+                task.name = newName;
+                task.value = parseFloat(newValue);
+                task.interval = parseInt(newInterval);
+                renderAvailableTasks();
+            }
         }
 
         // Family member functions
@@ -152,50 +183,16 @@
             closeFamilyMemberForm();
         }
 
+        function editFamilyMember(index) {
+            const member = familyMembers[index];
+            const newName = prompt("Edit Name:", member.name);
+            const newBirthdate = prompt("Edit Birthdate:", member.birthdate);
+            const newPhoto = prompt("Edit Photo URL:", member.photo);
+            if (newName) member.name = newName;
+            if (newBirthdate) member.birthdate = newBirthdate;
+            if (newPhoto) member.photo = newPhoto;
+            renderFamilyMembers();
+        }
+
         function deleteFamilyMember(index) {
-            const confirmDelete = confirm(`Are you sure you want to delete ${familyMembers[index].name}?`);
-            if (confirmDelete) {
-                familyMembers.splice(index, 1);
-                renderFamilyMembers();
-            }
-        }
-
-        function renderFamilyMembers() {
-            familyMembers.sort((a, b) => b.totalEarned - a.totalEarned);
-            const familyContainer = document.getElementById('familyMembers');
-            familyContainer.innerHTML = '';
-
-            familyMembers.forEach((member, index) => {
-                const age = calculateAge(member.birthdate);
-                const memberDiv = document.createElement('div');
-                memberDiv.classList.add('user-profile');
-                memberDiv.id = `familyMember-${index}`;
-
-                memberDiv.innerHTML = `
-                    <img src="${member.photo}" alt="${member.name}'s photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
-                    <h2>${member.name} (Age: ${age})</h2>
-                    <p>Daily Earnings: $${member.dailyEarnings}</p>
-                    <p>Weekly Earnings: $${member.weeklyEarnings}</p>
-                    <p>Total Earned: $${member.totalEarned}</p>
-                    <button onclick="deleteFamilyMember(${index})">Delete</button>
-                `;
-
-                familyContainer.appendChild(memberDiv);
-            });
-        }
-
-        function calculateAge(birthdate) {
-            const today = new Date();
-            const birthDate = new Date(birthdate);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return age;
-        }
-
-        // Function to assign a task to a family member
-        function assignTask(taskIndex) {
-            const familyMemberIndex = prompt("Enter the family member index to assign this task:");
-            if (family
+            const confirmDelete

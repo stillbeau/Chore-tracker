@@ -286,3 +286,81 @@
     renderAvailableTasks();
     renderFamilyMembers();
 </script>
+<script>
+    // Existing arrays and functions...
+
+    // Function to open the edit form with the selected family member's information
+    function editFamilyMember(index) {
+        const member = familyMembers[index];
+        document.getElementById('editMemberIndex').value = index;
+        document.getElementById('editMemberName').value = member.name;
+        document.getElementById('editMemberBirthdate').value = member.birthdate;
+        document.getElementById('editMemberPhoto').value = member.photo;
+        document.getElementById('editFamilyForm').style.display = 'block';
+    }
+
+    // Function to save changes to the family member
+    function saveFamilyMemberChanges() {
+        const index = document.getElementById('editMemberIndex').value;
+        const name = document.getElementById('editMemberName').value;
+        const birthdate = document.getElementById('editMemberBirthdate').value;
+        const photo = document.getElementById('editMemberPhoto').value || "https://via.placeholder.com/50";
+
+        // Update the family member's information
+        familyMembers[index].name = name;
+        familyMembers[index].birthdate = birthdate;
+        familyMembers[index].photo = photo;
+
+        renderFamilyMembers(); // Refresh the family members list
+        document.getElementById('editFamilyForm').style.display = 'none'; // Hide the edit form
+    }
+
+    // Render family members on the Home Screen with Edit option
+    function renderFamilyMembers() {
+        const familyContainer = document.getElementById('familyMembers');
+        familyContainer.innerHTML = '';
+
+        familyMembers.forEach((member, index) => {
+            const age = calculateAge(member.birthdate);
+            const memberDiv = document.createElement('div');
+            memberDiv.classList.add('user-profile');
+
+            memberDiv.innerHTML = `
+                <img src="${member.photo}" alt="${member.name}'s photo">
+                <h2>${member.name} (Age: ${age})</h2>
+                <p>Total Earned: $${member.totalEarned}</p>
+                <button onclick="editFamilyMember(${index})">Edit</button> <!-- Edit Button -->
+                <button onclick="deleteFamilyMember(${index})">Delete</button> <!-- Delete Button -->
+            `;
+
+            const tasksDiv = document.createElement('div');
+            tasksDiv.innerHTML = `<strong>Tasks:</strong>`;
+            
+            member.tasks.forEach((task, taskIndex) => {
+                const taskStatus = task.completed ? 'completed-task' : '';
+                tasksDiv.innerHTML += `
+                    <div class="${taskStatus}">${task.name} - $${task.value}
+                        ${!task.completed ? `<button onclick="completeTask(${index}, ${taskIndex})">Complete</button>` : ''}
+                    </div>
+                `;
+            });
+
+            memberDiv.appendChild(tasksDiv);
+            familyContainer.appendChild(memberDiv);
+        });
+    }
+
+    // HTML elements for the edit form
+</script>
+
+<!-- Edit Family Member Form -->
+<div id="editFamilyForm" class="form-container" style="display: none;">
+    <h3>Edit Family Member</h3>
+    <input type="hidden" id="editMemberIndex">
+    <label>Name: <input type="text" id="editMemberName"></label><br>
+    <label>Birthdate: <input type="date" id="editMemberBirthdate"></label><br>
+    <label>Photo URL: <input type="text" id="editMemberPhoto" placeholder="Optional"></label><br>
+    <button onclick="saveFamilyMemberChanges()">Save Changes</button>
+    <button onclick="document.getElementById('editFamilyForm').style.display = 'none'">Cancel</button>
+</div>
+

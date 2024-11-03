@@ -460,3 +460,98 @@
     <button onclick="saveFamilyMemberChanges()">Save Changes</button>
     <button onclick="document.getElementById('editFamilyForm').style.display = 'none'">Cancel</button>
 </div>
+<script>
+    // Array to store tasks with interval-only setting
+    const predefinedTasks = [
+        { name: "Load the Dishwasher", value: 5, interval: 3, lastCompleted: null, inHome: true },
+        { name: "Clean the Washroom", value: 10, interval: 7, lastCompleted: null, inHome: true }
+    ];
+
+    // Function to open the edit form with the selected task's information
+    function editTask(index) {
+        const task = predefinedTasks[index];
+        
+        // Fill the form with the selected task's current details
+        document.getElementById('editTaskIndex').value = index;
+        document.getElementById('editTaskName').value = task.name;
+        document.getElementById('editTaskValue').value = task.value;
+        document.getElementById('editTaskInterval').value = task.interval;
+        
+        // Insert the edit form right after the selected task's div
+        const taskDiv = document.getElementById(`task-${index}`);
+        taskDiv.insertAdjacentElement('afterend', document.getElementById('editTaskForm'));
+        document.getElementById('editTaskForm').style.display = 'block';
+    }
+
+    // Function to save changes to the task
+    function saveTaskChanges() {
+        const index = document.getElementById('editTaskIndex').value;
+        const name = document.getElementById('editTaskName').value;
+        const value = parseFloat(document.getElementById('editTaskValue').value);
+        const interval = parseInt(document.getElementById('editTaskInterval').value);
+
+        // Update the task's information
+        predefinedTasks[index].name = name;
+        predefinedTasks[index].value = value;
+        predefinedTasks[index].interval = interval;
+
+        renderAvailableTasks(); // Refresh the tasks list
+        document.getElementById('editTaskForm').style.display = 'none'; // Hide the edit form
+    }
+
+    // Function to delete a task with confirmation
+    function deleteTask(index) {
+        const confirmDelete = confirm(`Are you sure you want to delete the task "${predefinedTasks[index].name}"?`);
+        if (confirmDelete) {
+            predefinedTasks.splice(index, 1); // Remove the task from the array
+            renderAvailableTasks(); // Refresh the displayed list
+        }
+    }
+
+    // Render available tasks on the Home Screen with Edit/Delete options
+    function renderAvailableTasks() {
+        const availableTasksContainer = document.getElementById('availableTasks');
+        availableTasksContainer.innerHTML = '';
+
+        predefinedTasks.forEach((task, index) => {
+            if (task.inHome && isTaskDue(task)) {
+                const taskDiv = document.createElement('div');
+                taskDiv.classList.add('due-task');
+                taskDiv.id = `task-${index}`; // Unique ID for each task div
+
+                taskDiv.innerHTML = `
+                    <div>${task.name} - $${task.value} (Every ${task.interval} days)</div>
+                    <button onclick="editTask(${index})">Edit</button>
+                    <button onclick="deleteTask(${index})">Delete</button>
+                `;
+                availableTasksContainer.appendChild(taskDiv);
+            }
+        });
+    }
+
+    // Check if interval tasks are due based on the last completed date and interval
+    function isTaskDue(task) {
+        if (task.lastCompleted) {
+            const now = new Date();
+            const lastCompletedDate = new Date(task.lastCompleted);
+            const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
+            return daysSinceCompleted >= task.interval;
+        }
+        return true; // If never completed, it should be due
+    }
+
+    renderAvailableTasks();
+    renderFamilyMembers();
+</script>
+
+<!-- Edit Task Form -->
+<div id="editTaskForm" class="form-container" style="display: none;">
+    <h3>Edit Task</h3>
+    <input type="hidden" id="editTaskIndex">
+    <label>Task Name: <input type="text" id="editTaskName"></label><br>
+    <label>Value: <input type="number" id="editTaskValue"></label><br>
+    <label>Interval (days): <input type="number" id="editTaskInterval" min="1" max="30"></label><br>
+    <button onclick="saveTaskChanges()">Save Changes</button>
+    <button onclick="document.getElementById('editTaskForm').style.display = 'none'">Cancel</button>
+</div>
+

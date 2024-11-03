@@ -49,9 +49,9 @@
 
     <script>
         let familyMembers = [];
-        const predefinedTasks = []; // This array will store configured tasks
+        let predefinedTasks = []; // This array will store configured tasks
 
-        // Function to open the task setup form with common chores
+        // Open Task Setup Form
         function openTaskSetupForm() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = ''; // Clear any existing chores
@@ -65,6 +65,7 @@
                 "Tidy Up Living Room", "Sanitize Door Handles", "Organize Pantry"
             ];
 
+            // Render common chores in the task list
             commonChores.forEach((chore, index) => {
                 const taskRow = document.createElement('div');
                 taskRow.classList.add('task-row');
@@ -79,7 +80,7 @@
             document.getElementById('taskSetupForm').style.display = 'block';
         }
 
-        // Function to add custom tasks
+        // Add Custom Task
         function addCustomTask() {
             const taskList = document.getElementById('taskList');
             const taskRow = document.createElement('div');
@@ -93,17 +94,17 @@
             taskList.appendChild(taskRow);
         }
 
-        // Function to close the task setup form
+        // Close Task Setup Form
         function closeTaskSetupForm() {
             document.getElementById('taskSetupForm').style.display = 'none';
         }
 
-        // Function to save configured tasks
+        // Save Tasks
         function saveTasks() {
-            predefinedTasks.length = 0; // Clear previous tasks
+            predefinedTasks = []; // Clear previous tasks
 
-            const commonChores = document.querySelectorAll("#taskList .task-row");
-            commonChores.forEach((row, index) => {
+            const taskRows = document.querySelectorAll("#taskList .task-row");
+            taskRows.forEach((row, index) => {
                 const taskName = row.querySelector(`input[type="text"]`) ? row.querySelector(`input[type="text"]`).value : row.querySelector("span").textContent;
                 const value = document.getElementById(`taskValue-${index}`).value;
                 const interval = document.getElementById(`taskInterval-${index}`).value;
@@ -113,8 +114,7 @@
                         name: taskName,
                         value: parseFloat(value),
                         interval: parseInt(interval),
-                        lastCompleted: null,
-                        inHome: true
+                        lastCompleted: null
                     });
                 }
             });
@@ -123,7 +123,7 @@
             closeTaskSetupForm();
         }
 
-        // Render available tasks on the Home Screen
+        // Render Available Tasks
         function renderAvailableTasks() {
             const availableTasksContainer = document.getElementById('availableTasks');
             availableTasksContainer.innerHTML = '';
@@ -141,29 +141,7 @@
             });
         }
 
-        // Function to edit a task
-        function editTask(taskIndex) {
-            const task = predefinedTasks[taskIndex];
-            const newName = prompt("Edit Task Name:", task.name);
-            const newValue = prompt("Edit Task Value:", task.value);
-            const newInterval = prompt("Edit Task Interval (days):", task.interval);
-            if (newName && newValue && newInterval) {
-                task.name = newName;
-                task.value = parseFloat(newValue);
-                task.interval = parseInt(newInterval);
-                renderAvailableTasks();
-            }
-        }
-
-        // Family member functions
-        function openFamilyMemberForm() {
-            document.getElementById('familyMemberForm').style.display = 'block';
-        }
-
-        function closeFamilyMemberForm() {
-            document.getElementById('familyMemberForm').style.display = 'none';
-        }
-
+        // Add Family Member
         function addFamilyMember() {
             const name = document.getElementById('memberName').value;
             const birthdate = document.getElementById('memberBirthdate').value;
@@ -183,16 +161,34 @@
             closeFamilyMemberForm();
         }
 
-        function editFamilyMember(index) {
-            const member = familyMembers[index];
-            const newName = prompt("Edit Name:", member.name);
-            const newBirthdate = prompt("Edit Birthdate:", member.birthdate);
-            const newPhoto = prompt("Edit Photo URL:", member.photo);
-            if (newName) member.name = newName;
-            if (newBirthdate) member.birthdate = newBirthdate;
-            if (newPhoto) member.photo = newPhoto;
-            renderFamilyMembers();
+        // Render Family Members
+        function renderFamilyMembers() {
+            familyMembers.sort((a, b) => b.totalEarned - a.totalEarned);
+            const familyContainer = document.getElementById('familyMembers');
+            familyContainer.innerHTML = '';
+
+            familyMembers.forEach((member, index) => {
+                const memberDiv = document.createElement('div');
+                memberDiv.classList.add('user-profile');
+                memberDiv.innerHTML = `
+                    <img src="${member.photo}" alt="${member.name}'s photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+                    <h2>${member.name}</h2>
+                    <p>Daily Earnings: $${member.dailyEarnings}</p>
+                    <p>Weekly Earnings: $${member.weeklyEarnings}</p>
+                    <p>Total Earned: $${member.totalEarned}</p>
+                    <button onclick="editFamilyMember(${index})">Edit</button>
+                    <button onclick="deleteFamilyMember(${index})">Delete</button>
+                `;
+                familyContainer.appendChild(memberDiv);
+            });
         }
 
-        function deleteFamilyMember(index) {
-            const confirmDelete
+        // Delete Task
+        function deleteTask(taskIndex) {
+            predefinedTasks.splice(taskIndex, 1);
+            renderAvailableTasks();
+        }
+
+        // Close Family Member Form
+        function closeFamilyMemberForm() {
+            document.getElementById('familyMemberForm').style.display = '

@@ -77,181 +77,61 @@
         <div id="familyMembers"></div>
     </div>
 
-    <script>
-        let familyMembers = [
-            { name: "Mom", birthdate: "1980-05-15", photo: "https://via.placeholder.com/50", totalEarned: 120, tasks: [] },
-            { name: "Dad", birthdate: "1982-08-23", photo: "https://via.placeholder.com/50", totalEarned: 85, tasks: [] },
-        ];
+ <script>
+    // Array to store family members
+    let familyMembers = [
+        { name: "Mom", birthdate: "1980-05-15", photo: "https://via.placeholder.com/50", totalEarned: 120, tasks: [] },
+        { name: "Dad", birthdate: "1982-08-23", photo: "https://via.placeholder.com/50", totalEarned: 85, tasks: [] },
+    ];
 
-        const predefinedTasks = [
-            { name: "Load the Dishwasher", value: 5, type: "time", dueTime: "19:00", inHome: true },
-            { name: "Clean the Washroom", value: 10, type: "interval", interval: 7, lastCompleted: null, inHome: true }
-        ];
+    // Array to store tasks
+    const predefinedTasks = [
+        { name: "Load the Dishwasher", value: 5, type: "time", dueTime: "19:00", inHome: true },
+        { name: "Clean the Washroom", value: 10, type: "interval", interval: 7, lastCompleted: null, inHome: true }
+    ];
 
-        // Toggle the Task Form
-        function toggleTaskForm() {
-            const taskForm = document.getElementById('taskForm');
-            taskForm.style.display = taskForm.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // Toggle the Family Form
-        function toggleFamilyForm() {
-            const familyForm = document.getElementById('familyForm');
-            familyForm.style.display = familyForm.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // Show or hide due options based on task type
-        function toggleDueOptions() {
-            const dueType = document.getElementById('dueType').value;
-            document.getElementById('dueTimeLabel').style.display = dueType === 'time' ? 'block' : 'none';
-            document.getElementById('intervalLabel').style.display = dueType === 'interval' ? 'block' : 'none';
-        }
-
-        // Add a new task to the available tasks
-        function addCustomTask() {
-            const name = document.getElementById('customTaskName').value;
-            const value = parseFloat(document.getElementById('customTaskValue').value);
-            const dueType = document.getElementById('dueType').value;
-            let newTask;
-
-            if (dueType === "time") {
-                const dueTime = document.getElementById('dueTime').value;
-                newTask = { name, value, type: "time", dueTime, inHome: true };
-            } else {
-                const interval = parseInt(document.getElementById('dueInterval').value);
-                newTask = { name, value, type: "interval", interval, lastCompleted: null, inHome: true };
-            }
-
-            predefinedTasks.push(newTask);
-            renderAvailableTasks();
-            toggleTaskForm();
-        }
-
-        // Check if interval tasks are due based on the last completed date and interval
-        function isTaskDue(task) {
-            if (task.type === "time") {
-                return true; // Time-based tasks are displayed daily
-            } else if (task.type === "interval" && task.lastCompleted) {
-                const now = new Date();
-                const lastCompletedDate = new Date(task.lastCompleted);
-                const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
-                return daysSinceCompleted >= task.interval;
-            }
-            return task.type === "interval" && !task.lastCompleted;
-        }
-
-        // Render available tasks on the Home Screen, including due interval tasks
-        function renderAvailableTasks() {
-            const availableTasksContainer = document.getElementById('availableTasks');
-            availableTasksContainer.innerHTML = '';
-
-            predefinedTasks.forEach((task, index) => {
-                if (task.inHome && isTaskDue(task)) {
-                    const taskDiv = document.createElement('div');
-                    taskDiv.classList.add('due-task');
-                    taskDiv.innerHTML = `
-                        <div>${task.name} - $${task.value}</div>
-                        <button onclick="assignTask(${index})">Assign</button>
-                    `;
-                    availableTasksContainer.appendChild(taskDiv);
-                }
-            });
-        }
-
-        function assignTask(taskIndex) {
-            const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
-            if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
-                const task = predefinedTasks[taskIndex];
-                familyMembers[familyMemberIndex].tasks.push({ ...task, completed: false });
-
-                // Update lastCompleted if the task is interval-based
-                if (task.type === "interval") {
-                    task.lastCompleted = new Date().toISOString(); // Store the last completed date
-                }
-                renderFamilyMembers();
-            }
-        }
-
-        // Render family members on the Home Screen
-        function renderFamilyMembers() {
-            const familyContainer = document.getElementById('familyMembers');
-            familyContainer.innerHTML = '';
-
-            familyMembers.forEach((member, index) =>
-            
-            <script>
-    // Check if interval tasks are due based on the last completed date and interval
-    function isTaskDue(task) {
-        if (task.type === "time") {
-            return true; // Daily tasks are always shown
-        } else if (task.type === "interval" && task.lastCompleted) {
-            const now = new Date();
-            const lastCompletedDate = new Date(task.lastCompleted);
-            const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
-            return daysSinceCompleted >= task.interval;
-        }
-        return task.type === "interval" && !task.lastCompleted;
-    }
-
-    // Render available tasks on the Home Screen, including due interval tasks
-    function renderAvailableTasks() {
-        const availableTasksContainer = document.getElementById('availableTasks');
-        availableTasksContainer.innerHTML = '';
-
-        predefinedTasks.forEach((task, index) => {
-            if (task.inHome && isTaskDue(task)) {
-                const taskDiv = document.createElement('div');
-                taskDiv.classList.add('due-task');
-                taskDiv.innerHTML = `
-                    <div>${task.name} - $${task.value}</div>
-                    <button onclick="assignTask(${index})">Assign</button>
-                `;
-                availableTasksContainer.appendChild(taskDiv);
-            }
-        });
-    }
-
-    // When assigning a task, update the last completed date for interval tasks
-    function assignTask(taskIndex) {
-        const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
-        if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
-            const task = predefinedTasks[taskIndex];
-            familyMembers[familyMemberIndex].tasks.push({ ...task, completed: false });
-
-            // Update lastCompleted if the task is interval-based
-            if (task.type === "interval") {
-                task.lastCompleted = new Date().toISOString(); // Store the last completed date
-            }
-            renderFamilyMembers();
-        }
-    }
-
-    renderAvailableTasks();
-    renderFamilyMembers();
-</script>
-<script>
     // Toggle the Task Form visibility
     function toggleTaskForm() {
         const taskForm = document.getElementById('taskForm');
-        if (taskForm.style.display === 'none' || taskForm.style.display === '') {
-            taskForm.style.display = 'block';
-            console.log("Task form opened.");
-        } else {
-            taskForm.style.display = 'none';
-            console.log("Task form closed.");
-        }
+        taskForm.style.display = taskForm.style.display === 'none' || taskForm.style.display === '' ? 'block' : 'none';
     }
 
     // Toggle the Family Form visibility
     function toggleFamilyForm() {
         const familyForm = document.getElementById('familyForm');
-        if (familyForm.style.display === 'none' || familyForm.style.display === '') {
-            familyForm.style.display = 'block';
-            console.log("Family form opened.");
+        familyForm.style.display = familyForm.style.display === 'none' || familyForm.style.display === '' ? 'block' : 'none';
+    }
+
+    // Add a new task from the form inputs
+    function addCustomTask() {
+        const name = document.getElementById('customTaskName').value;
+        const value = parseFloat(document.getElementById('customTaskValue').value);
+        const dueType = document.getElementById('dueType').value;
+
+        let newTask;
+        if (dueType === "time") {
+            const dueTime = document.getElementById('dueTime').value;
+            newTask = { name, value, type: "time", dueTime, inHome: true };
         } else {
-            familyForm.style.display = 'none';
-            console.log("Family form closed.");
+            const interval = parseInt(document.getElementById('dueInterval').value);
+            newTask = { name, value, type: "interval", interval, lastCompleted: null, inHome: true };
         }
+
+        predefinedTasks.push(newTask);
+        renderAvailableTasks();
+        toggleTaskForm(); // Hide the form after adding
+    }
+
+    // Add a new family member from the form inputs
+    function addFamilyMember() {
+        const name = document.getElementById('memberName').value;
+        const birthdate = document.getElementById('memberBirthdate').value;
+        const photo = document.getElementById('memberPhoto').value || "https://via.placeholder.com/50";
+
+        const newMember = { name, birthdate, photo, totalEarned: 0, tasks: [] };
+        familyMembers.push(newMember);
+        renderFamilyMembers();
+        toggleFamilyForm(); // Hide the form after adding
     }
 
     // Check if interval tasks are due based on the last completed date and interval
@@ -285,23 +165,51 @@
         });
     }
 
-    // When assigning a task, update the last completed date for interval tasks
-    function assignTask(taskIndex) {
-        const familyMemberIndex = prompt("Enter family member's index (0 for Mom, 1 for Dad):");
-        if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
-            const task = predefinedTasks[taskIndex];
-            familyMembers[familyMemberIndex].tasks.push({ ...task, completed: false });
+    // Render family members on the Home Screen
+    function renderFamilyMembers() {
+        const familyContainer = document.getElementById('familyMembers');
+        familyContainer.innerHTML = '';
 
-            // Update lastCompleted if the task is interval-based
-            if (task.type === "interval") {
-                task.lastCompleted = new Date().toISOString(); // Store the last completed date
-            }
-            renderFamilyMembers();
+        familyMembers.forEach((member, index) => {
+            const age = calculateAge(member.birthdate);
+            const memberDiv = document.createElement('div');
+            memberDiv.classList.add('user-profile');
+
+            memberDiv.innerHTML = `
+                <img src="${member.photo}" alt="${member.name}'s photo">
+                <h2>${member.name} (Age: ${age})</h2>
+                <p>Total Earned: $${member.totalEarned}</p>
+            `;
+
+            const tasksDiv = document.createElement('div');
+            tasksDiv.innerHTML = `<strong>Tasks:</strong>`;
+            
+            member.tasks.forEach((task, taskIndex) => {
+                const taskStatus = task.completed ? 'completed-task' : '';
+                tasksDiv.innerHTML += `
+                    <div class="${taskStatus}">${task.name} - $${task.value}
+                        ${!task.completed ? `<button onclick="completeTask(${index}, ${taskIndex})">Complete</button>` : ''}
+                    </div>
+                `;
+            });
+
+            memberDiv.appendChild(tasksDiv);
+            familyContainer.appendChild(memberDiv);
+        });
+    }
+
+    // Calculate age from birthdate
+    function calculateAge(birthdate) {
+        const today = new Date();
+        const birthDate = new Date(birthdate);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
         }
+        return age;
     }
 
     renderAvailableTasks();
     renderFamilyMembers();
 </script>
-
-            

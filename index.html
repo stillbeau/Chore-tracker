@@ -213,3 +213,76 @@
     renderAvailableTasks();
     renderFamilyMembers();
 </script>
+<script>
+    // Existing arrays and functions...
+
+    // Add a new family member from the form inputs
+    function addFamilyMember() {
+        const name = document.getElementById('memberName').value;
+        const birthdate = document.getElementById('memberBirthdate').value;
+        const photo = document.getElementById('memberPhoto').value || "https://via.placeholder.com/50";
+
+        const newMember = { name, birthdate, photo, totalEarned: 0, tasks: [] };
+        familyMembers.push(newMember);
+        renderFamilyMembers();
+        toggleFamilyForm(); // Hide the form after adding
+    }
+
+    // Function to delete a family member with confirmation
+    function deleteFamilyMember(index) {
+        const confirmDelete = confirm(`Are you sure you want to delete ${familyMembers[index].name}?`);
+        if (confirmDelete) {
+            familyMembers.splice(index, 1); // Remove the member from the array
+            renderFamilyMembers(); // Refresh the displayed list
+        }
+    }
+
+    // Render family members on the Home Screen, with Delete option
+    function renderFamilyMembers() {
+        const familyContainer = document.getElementById('familyMembers');
+        familyContainer.innerHTML = '';
+
+        familyMembers.forEach((member, index) => {
+            const age = calculateAge(member.birthdate);
+            const memberDiv = document.createElement('div');
+            memberDiv.classList.add('user-profile');
+
+            memberDiv.innerHTML = `
+                <img src="${member.photo}" alt="${member.name}'s photo">
+                <h2>${member.name} (Age: ${age})</h2>
+                <p>Total Earned: $${member.totalEarned}</p>
+                <button onclick="deleteFamilyMember(${index})">Delete</button> <!-- Delete Button -->
+            `;
+
+            const tasksDiv = document.createElement('div');
+            tasksDiv.innerHTML = `<strong>Tasks:</strong>`;
+            
+            member.tasks.forEach((task, taskIndex) => {
+                const taskStatus = task.completed ? 'completed-task' : '';
+                tasksDiv.innerHTML += `
+                    <div class="${taskStatus}">${task.name} - $${task.value}
+                        ${!task.completed ? `<button onclick="completeTask(${index}, ${taskIndex})">Complete</button>` : ''}
+                    </div>
+                `;
+            });
+
+            memberDiv.appendChild(tasksDiv);
+            familyContainer.appendChild(memberDiv);
+        });
+    }
+
+    // Calculate age from birthdate
+    function calculateAge(birthdate) {
+        const today = new Date();
+        const birthDate = new Date(birthdate);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    renderAvailableTasks();
+    renderFamilyMembers();
+</script>

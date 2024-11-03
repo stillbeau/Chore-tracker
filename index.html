@@ -6,51 +6,64 @@
     <title>Family Chore Tracker</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        h1 { text-align: center; }
+        h1, h2 { text-align: center; }
         .form-container { padding: 10px; border: 1px solid #ddd; margin-top: 10px; display: none; }
         .task-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .btn { cursor: pointer; color: white; background-color: #007BFF; border: none; padding: 5px 10px; border-radius: 5px; }
+        .user-profile { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <h1>Family Chore Tracker</h1>
 
-    <!-- Task Setup Form (Appears when the + button is clicked) -->
+    <!-- Task Setup Form -->
     <div id="taskSetupForm" class="form-container">
         <h3>Set Up Household Chores</h3>
-        <div id="taskList">
-            <!-- Dynamically generated list of chores will go here -->
-        </div>
+        <div id="taskList"></div>
         <button class="btn" onclick="saveTasks()">Save Chores</button>
         <button class="btn" style="background-color: #dc3545;" onclick="closeTaskSetupForm()">Cancel</button>
     </div>
 
     <!-- Button to Open Task Setup Form -->
-    <button class="btn" onclick="openTaskSetupForm()">Add New Tasks</button> <!-- + button functionality -->
-
-    <!-- Container to display available tasks -->
+    <button class="btn" onclick="openTaskSetupForm()">Add New Tasks</button>
     <h2>Available Tasks</h2>
     <div id="availableTasks"></div>
 
-    <script>
-        // Array of predefined common household chores
-        const commonChores = [
-            "Wash Dishes", "Vacuum Living Room", "Take Out Trash", "Mop Floors",
-            "Clean Bathroom", "Dust Shelves", "Laundry", "Water Plants",
-            "Wipe Kitchen Counters", "Clean Windows", "Organize Closet",
-            "Change Bed Sheets", "Clean Refrigerator", "Sweep Porch",
-            "Take Out Recycling", "Wipe Down Appliances", "Clean Mirrors",
-            "Tidy Up Living Room", "Sanitize Door Handles", "Organize Pantry"
-        ];
+    <!-- Family Member Form -->
+    <div id="familyMemberForm" class="form-container">
+        <h3>Add Family Member</h3>
+        <label>Name: <input type="text" id="memberName"></label><br>
+        <label>Birthdate: <input type="date" id="memberBirthdate"></label><br>
+        <label>Photo URL: <input type="text" id="memberPhoto" placeholder="Optional"></label><br>
+        <button class="btn" onclick="addFamilyMember()">Add Member</button>
+        <button class="btn" style="background-color: #dc3545;" onclick="closeFamilyMemberForm()">Cancel</button>
+    </div>
 
-        const predefinedTasks = []; // To store the configured tasks
+    <!-- Button to Open Family Member Form -->
+    <button class="btn" onclick="openFamilyMemberForm()">Add New Family Member</button>
+
+    <!-- Container to display family members -->
+    <h2>Family Members (Ranked by All-Time Earnings)</h2>
+    <div id="familyMembers"></div>
+
+    <script>
+        let familyMembers = [];
+        const predefinedTasks = []; // This array will store configured tasks
 
         // Function to open the task setup form with common chores
         function openTaskSetupForm() {
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = ''; // Clear any existing chores
 
-            // Generate rows for each common chore with input fields for value and interval
+            const commonChores = [
+                "Wash Dishes", "Vacuum Living Room", "Take Out Trash", "Mop Floors",
+                "Clean Bathroom", "Dust Shelves", "Laundry", "Water Plants",
+                "Wipe Kitchen Counters", "Clean Windows", "Organize Closet",
+                "Change Bed Sheets", "Clean Refrigerator", "Sweep Porch",
+                "Take Out Recycling", "Wipe Down Appliances", "Clean Mirrors",
+                "Tidy Up Living Room", "Sanitize Door Handles", "Organize Pantry"
+            ];
+
             commonChores.forEach((chore, index) => {
                 const taskRow = document.createElement('div');
                 taskRow.classList.add('task-row');
@@ -74,24 +87,24 @@
         function saveTasks() {
             predefinedTasks.length = 0; // Clear previous tasks
 
-            commonChores.forEach((chore, index) => {
+            const commonChores = document.querySelectorAll("#taskList .task-row");
+            commonChores.forEach((row, index) => {
                 const value = document.getElementById(`taskValue-${index}`).value;
                 const interval = document.getElementById(`taskInterval-${index}`).value;
 
-                // Only add the task if value and interval are set
                 if (value && interval) {
                     predefinedTasks.push({
-                        name: chore,
+                        name: row.querySelector("span").textContent,
                         value: parseFloat(value),
                         interval: parseInt(interval),
-                        lastCompleted: null, // Initial last completed is null
+                        lastCompleted: null,
                         inHome: true
                     });
                 }
             });
 
-            renderAvailableTasks(); // Refresh the tasks on the main screen
-            closeTaskSetupForm(); // Hide the form
+            renderAvailableTasks();
+            closeTaskSetupForm();
         }
 
         // Render available tasks on the Home Screen
@@ -100,261 +113,26 @@
             availableTasksContainer.innerHTML = '';
 
             predefinedTasks.forEach((task, index) => {
-                if (isTaskDue(task)) {
-                    const taskDiv = document.createElement('div');
-                    taskDiv.classList.add('due-task');
-                    taskDiv.innerHTML = `
-                        <div>${task.name} - $${task.value} (Every ${task.interval} days)</div>
-                        <button onclick="completeTask(${index})">Complete</button>
-                        <button onclick="deleteTask(${index})">Delete</button>
-                    `;
-                    availableTasksContainer.appendChild(taskDiv);
-                }
-            });
-        }
-
-        // Check if interval tasks are due based on the last completed date and interval
-        function isTaskDue(task) {
-            if (task.lastCompleted) {
-                const now = new Date();
-                const lastCompletedDate = new Date(task.lastCompleted);
-                const daysSinceCompleted = Math.floor((now - lastCompletedDate) / (1000 * 60 * 60 * 24));
-                return daysSinceCompleted >= task.interval;
-            }
-            return true; // If never completed, it should be due
-        }
-
-        // Function to delete a task
-        function deleteTask(index) {
-            const confirmDelete = confirm(`Are you sure you want to delete the task "${predefinedTasks[index].name}"?`);
-            if (confirmDelete) {
-                predefinedTasks.splice(index, 1); // Remove the task from the array
-                renderAvailableTasks(); // Refresh the displayed list
-            }
-        }
-
-        // Function to mark a task as completed and set the last completed date
-        function completeTask(index) {
-            predefinedTasks[index].lastCompleted = new Date().toISOString(); // Store the current date as last completed
-            renderAvailableTasks(); // Refresh the displayed list
-        }
-
-        // Initialize with empty task list
-        renderAvailableTasks();
-    </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Chore Tracker</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        h1 { text-align: center; }
-        .form-container { padding: 10px; border: 1px solid #ddd; margin-top: 10px; display: none; }
-        .task-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .btn { cursor: pointer; color: white; background-color: #007BFF; border: none; padding: 5px 10px; border-radius: 5px; }
-        .user-profile { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <h1>Family Chore Tracker</h1>
-
-    <!-- Family Member Form -->
-    <div id="familyMemberForm" class="form-container">
-        <h3>Add Family Member</h3>
-        <label>Name: <input type="text" id="memberName"></label><br>
-        <label>Birthdate: <input type="date" id="memberBirthdate"></label><br>
-        <label>Photo URL: <input type="text" id="memberPhoto" placeholder="Optional"></label><br>
-        <button class="btn" onclick="addFamilyMember()">Add Member</button>
-        <button class="btn" style="background-color: #dc3545;" onclick="closeFamilyMemberForm()">Cancel</button>
-    </div>
-
-    <!-- Button to Open Family Member Form -->
-    <button class="btn" onclick="openFamilyMemberForm()">Add New Family Member</button>
-
-    <!-- Container to display family members -->
-    <h2>Family Members</h2>
-    <div id="familyMembers"></div>
-
-    <script>
-        let familyMembers = [];
-
-        // Function to open the family member form
-        function openFamilyMemberForm() {
-            document.getElementById('familyMemberForm').style.display = 'block';
-        }
-
-        // Function to close the family member form
-        function closeFamilyMemberForm() {
-            document.getElementById('familyMemberForm').style.display = 'none';
-        }
-
-        // Function to add a new family member
-        function addFamilyMember() {
-            const name = document.getElementById('memberName').value;
-            const birthdate = document.getElementById('memberBirthdate').value;
-            const photo = document.getElementById('memberPhoto').value || "https://via.placeholder.com/50";
-
-            const newMember = { name, birthdate, photo, totalEarned: 0, tasks: [] };
-            familyMembers.push(newMember);
-            renderFamilyMembers();
-            closeFamilyMemberForm(); // Hide the form after adding
-        }
-
-        // Function to delete a family member with confirmation
-        function deleteFamilyMember(index) {
-            const confirmDelete = confirm(`Are you sure you want to delete ${familyMembers[index].name}?`);
-            if (confirmDelete) {
-                familyMembers.splice(index, 1); // Remove the member from the array
-                renderFamilyMembers(); // Refresh the displayed list
-            }
-        }
-
-        // Function to open the edit form with the selected family member's information
-        function editFamilyMember(index) {
-            const member = familyMembers[index];
-            document.getElementById('editMemberIndex').value = index;
-            document.getElementById('editMemberName').value = member.name;
-            document.getElementById('editMemberBirthdate').value = member.birthdate;
-            document.getElementById('editMemberPhoto').value = member.photo;
-            document.getElementById('editFamilyForm').style.display = 'block';
-
-            // Insert the edit form below the selected member
-            const memberDiv = document.getElementById(`familyMember-${index}`);
-            memberDiv.insertAdjacentElement('afterend', document.getElementById('editFamilyForm'));
-        }
-
-        // Function to save changes to the family member
-        function saveFamilyMemberChanges() {
-            const index = document.getElementById('editMemberIndex').value;
-            const name = document.getElementById('editMemberName').value;
-            const birthdate = document.getElementById('editMemberBirthdate').value;
-            const photo = document.getElementById('editMemberPhoto').value || "https://via.placeholder.com/50";
-
-            // Update the family member's information
-            familyMembers[index].name = name;
-            familyMembers[index].birthdate = birthdate;
-            familyMembers[index].photo = photo;
-
-            renderFamilyMembers(); // Refresh the family members list
-            document.getElementById('editFamilyForm').style.display = 'none'; // Hide the edit form
-        }
-
-        // Render family members on the Home Screen
-        function renderFamilyMembers() {
-            const familyContainer = document.getElementById('familyMembers');
-            familyContainer.innerHTML = '';
-
-            familyMembers.forEach((member, index) => {
-                const age = calculateAge(member.birthdate);
-                const memberDiv = document.createElement('div');
-                memberDiv.classList.add('user-profile');
-                memberDiv.id = `familyMember-${index}`; // Unique ID for each family member div
-
-                memberDiv.innerHTML = `
-                    <img src="${member.photo}" alt="${member.name}'s photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
-                    <h2>${member.name} (Age: ${age})</h2>
-                    <p>Total Earned: $${member.totalEarned}</p>
-                    <button onclick="editFamilyMember(${index})">Edit</button>
-                    <button onclick="deleteFamilyMember(${index})">Delete</button>
+                const taskDiv = document.createElement('div');
+                taskDiv.classList.add('due-task');
+                taskDiv.innerHTML = `
+                    <div>${task.name} - $${task.value} (Every ${task.interval} days)</div>
+                    <button onclick="assignTask(${index})">Assign</button>
+                    <button onclick="deleteTask(${index})">Delete</button>
                 `;
-
-                familyContainer.appendChild(memberDiv);
+                availableTasksContainer.appendChild(taskDiv);
             });
         }
 
-        // Calculate age from birthdate
-        function calculateAge(birthdate) {
-            const today = new Date();
-            const birthDate = new Date(birthdate);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return age;
-        }
-
-        // Edit Family Member Inline Form
-    </script>
-
-    <!-- Edit Family Member Form -->
-    <div id="editFamilyForm" class="form-container" style="display: none;">
-        <h3>Edit Family Member</h3>
-        <input type="hidden" id="editMemberIndex">
-        <label>Name: <input type="text" id="editMemberName"></label><br>
-        <label>Birthdate: <input type="date" id="editMemberBirthdate"></label><br>
-        <label>Photo URL: <input type="text" id="editMemberPhoto" placeholder="Optional"></label><br>
-        <button onclick="saveFamilyMemberChanges()">Save Changes</button>
-        <button onclick="document.getElementById('editFamilyForm').style.display = 'none'">Cancel</button>
-    </div>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Chore Tracker</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        h1 { text-align: center; }
-        .form-container { padding: 10px; border: 1px solid #ddd; margin-top: 10px; display: none; }
-        .task-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .btn { cursor: pointer; color: white; background-color: #007BFF; border: none; padding: 5px 10px; border-radius: 5px; }
-        .user-profile { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <h1>Family Chore Tracker</h1>
-
-    <!-- Task Setup Form -->
-    <div id="taskSetupForm" class="form-container">
-        <h3>Set Up Household Chores</h3>
-        <div id="taskList">
-            <!-- Dynamically generated list of chores will go here -->
-        </div>
-        <button class="btn" onclick="saveTasks()">Save Chores</button>
-        <button class="btn" style="background-color: #dc3545;" onclick="closeTaskSetupForm()">Cancel</button>
-    </div>
-
-    <button class="btn" onclick="openTaskSetupForm()">Add New Tasks</button>
-    <h2>Available Tasks</h2>
-    <div id="availableTasks"></div>
-
-    <!-- Family Member Form -->
-    <div id="familyMemberForm" class="form-container">
-        <h3>Add Family Member</h3>
-        <label>Name: <input type="text" id="memberName"></label><br>
-        <label>Birthdate: <input type="date" id="memberBirthdate"></label><br>
-        <label>Photo URL: <input type="text" id="memberPhoto" placeholder="Optional"></label><br>
-        <button class="btn" onclick="addFamilyMember()">Add Member</button>
-        <button class="btn" style="background-color: #dc3545;" onclick="closeFamilyMemberForm()">Cancel</button>
-    </div>
-
-    <button class="btn" onclick="openFamilyMemberForm()">Add New Family Member</button>
-
-    <h2>Family Members (Ranked by All-Time Earnings)</h2>
-    <div id="familyMembers"></div>
-
-    <script>
-        let familyMembers = [];
-
-        // Function to open the family member form
+        // Family member functions
         function openFamilyMemberForm() {
             document.getElementById('familyMemberForm').style.display = 'block';
         }
 
-        // Function to close the family member form
         function closeFamilyMemberForm() {
             document.getElementById('familyMemberForm').style.display = 'none';
         }
 
-        // Function to add a new family member
         function addFamilyMember() {
             const name = document.getElementById('memberName').value;
             const birthdate = document.getElementById('memberBirthdate').value;
@@ -374,7 +152,6 @@
             closeFamilyMemberForm();
         }
 
-        // Function to delete a family member with confirmation
         function deleteFamilyMember(index) {
             const confirmDelete = confirm(`Are you sure you want to delete ${familyMembers[index].name}?`);
             if (confirmDelete) {
@@ -383,34 +160,6 @@
             }
         }
 
-        // Function to open the edit form with the selected family member's information
-        function editFamilyMember(index) {
-            const member = familyMembers[index];
-            document.getElementById('editMemberIndex').value = index;
-            document.getElementById('editMemberName').value = member.name;
-            document.getElementById('editMemberBirthdate').value = member.birthdate;
-            document.getElementById('editMemberPhoto').value = member.photo;
-            document.getElementById('editFamilyForm').style.display = 'block';
-
-            const memberDiv = document.getElementById(`familyMember-${index}`);
-            memberDiv.insertAdjacentElement('afterend', document.getElementById('editFamilyForm'));
-        }
-
-        function saveFamilyMemberChanges() {
-            const index = document.getElementById('editMemberIndex').value;
-            const name = document.getElementById('editMemberName').value;
-            const birthdate = document.getElementById('editMemberBirthdate').value;
-            const photo = document.getElementById('editMemberPhoto').value || "https://via.placeholder.com/50";
-
-            familyMembers[index].name = name;
-            familyMembers[index].birthdate = birthdate;
-            familyMembers[index].photo = photo;
-
-            renderFamilyMembers();
-            document.getElementById('editFamilyForm').style.display = 'none';
-        }
-
-        // Render family members, sorted by all-time earnings
         function renderFamilyMembers() {
             familyMembers.sort((a, b) => b.totalEarned - a.totalEarned);
             const familyContainer = document.getElementById('familyMembers');
@@ -428,7 +177,6 @@
                     <p>Daily Earnings: $${member.dailyEarnings}</p>
                     <p>Weekly Earnings: $${member.weeklyEarnings}</p>
                     <p>Total Earned: $${member.totalEarned}</p>
-                    <button onclick="editFamilyMember(${index})">Edit</button>
                     <button onclick="deleteFamilyMember(${index})">Delete</button>
                 `;
 
@@ -436,20 +184,6 @@
             });
         }
 
-        // Function to assign a task to a family member
-        function assignTask(taskIndex) {
-            const familyMemberIndex = prompt("Enter the family member index to assign this task:");
-            if (familyMemberIndex !== null && familyMembers[familyMemberIndex]) {
-                const task = predefinedTasks[taskIndex];
-                familyMembers[familyMemberIndex].tasks.push(task);
-                familyMembers[familyMemberIndex].dailyEarnings += task.value;
-                familyMembers[familyMemberIndex].weeklyEarnings += task.value;
-                familyMembers[familyMemberIndex].totalEarned += task.value;
-                renderFamilyMembers();
-            }
-        }
-
-        // Calculate age from birthdate
         function calculateAge(birthdate) {
             const today = new Date();
             const birthDate = new Date(birthdate);
@@ -460,17 +194,8 @@
             }
             return age;
         }
-    </script>
 
-    <!-- Edit Family Member Form -->
-    <div id="editFamilyForm" class="form-container" style="display: none;">
-        <h3>Edit Family Member</h3>
-        <input type="hidden" id="editMemberIndex">
-        <label>Name: <input type="text" id="editMemberName"></label><br>
-        <label>Birthdate: <input type="date" id="editMemberBirthdate"></label><br>
-        <label>Photo URL: <input type="text" id="editMemberPhoto" placeholder="Optional"></label><br>
-        <button onclick="saveFamilyMemberChanges()">Save Changes</button>
-        <button onclick="document.getElementById('editFamilyForm').style.display = 'none'">Cancel</button>
-    </div>
-</body>
-</html>
+        // Function to assign a task to a family member
+        function assignTask(taskIndex) {
+            const familyMemberIndex = prompt("Enter the family member index to assign this task:");
+            if (family
